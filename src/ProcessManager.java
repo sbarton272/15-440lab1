@@ -6,6 +6,7 @@ import java.util.Map;
  * 
  * TODO
  * - Get grep to run to completion
+ * - Catch death incident
  * - Cleanup completed threads
  * 
  * @author Spencer
