@@ -6,6 +6,8 @@ import java.io.Serializable;
 public class TransactionalFileInputStream extends InputStream implements Serializable {
 
 	private static final long serialVersionUID = -9067377820514406998L;
+	private static final String SERIAL_PATH = "tmp";
+	private Serializer serializer;
 
 	public TransactionalFileInputStream(String string) {
 		// TODO Auto-generated constructor stub
