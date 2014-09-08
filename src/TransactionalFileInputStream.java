@@ -31,7 +31,7 @@ public class TransactionalFileInputStream extends InputStream implements Seriali
 	}
 
 	/**
-	 * Deserialize the input file descriptor, read and serialize.
+	 * Deserialize the input file descriptor, read, serialize and close the connection.
 	 */
 	@Override
 	public int read() throws IOException {

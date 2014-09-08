@@ -8,7 +8,7 @@ public class lab1 {
 		String[] grepArgs = {"aa", "test/grep.txt", "test/grepOut.txt"};
 		MigratableProcess grepProcess = new GrepProcess(grepArgs);
 		
-		int grepPid = processManager.launch(grepProcess);
+		processManager.launch(grepProcess);
 		
 	}
 	

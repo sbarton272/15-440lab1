@@ -38,7 +38,7 @@ public class TransactionalFileOutputStream extends OutputStream implements Seria
 	}
 	
 	/**
-	 * Deserialize the outFile, write to it, reserialize and close the connection.
+	 * Deserialize the outFile, write to it, serialize and close the connection.
 	 */
 	@Override
 	public void write(int arg0) throws IOException {
