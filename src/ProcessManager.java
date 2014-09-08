@@ -8,6 +8,7 @@ import java.util.Map;
  * - Get grep to run to completion
  * - Catch death incident
  * - Cleanup completed threads
+ * - Name member variables with m in front
  * 
  * @author Spencer
  *
