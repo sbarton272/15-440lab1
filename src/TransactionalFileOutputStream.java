@@ -14,23 +14,25 @@ import java.io.Serializable;
 public class TransactionalFileOutputStream extends OutputStream implements Serializable {
 
 	private static final long serialVersionUID = -3557579291611635226L;
-	//private static final String SERIAL_PATH = "tmp";
 	private String fileName;
-	//private Serializer serializer;
-	private OutputStream outFile;
+	private boolean append;
+	private long position;
+	private FileOutputStream outFile;
 	
-	public TransactionalFileOutputStream(String fileName, boolean b) throws FileNotFoundException {
+	public TransactionalFileOutputStream(String fileName, boolean append) throws FileNotFoundException {
 		// TODO what is boolean for?
 		this.fileName = fileName;
-		outFile = new FileOutputStream(fileName);
+		this.append = append;
 		
-		// Generate unique file name for serialization of file descriptor
-		//String uid = Integer.toString(outFile.hashCode());
-		//serializer = new Serializer(SERIAL_PATH + java.io.File.separator + uid);
+		outFile = new FileOutputStream(fileName, append);
 		
-		// Serialize outFile so ready to be used later
-		//serializer.serialize(outFile);
-		
+		// Get position
+		try {
+			this.position = outFile.getChannel().position();
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+				
 		// Close outFile so other processes can use it
 		try {
 			outFile.close();
@@ -39,21 +41,23 @@ public class TransactionalFileOutputStream extends OutputStream implements Seria
 		}
 	}
 	
-	/**
-	 * Deserialize the outFile, write to it, serialize and close the connection.
-	 */
 	@Override
-	public void write(int arg0) throws IOException {
+	public void write(int b) throws IOException {
 		// TODO optimize by leaving open unless migrated
 		// TODO does process ever close?
         
-        // Write to current serialzed outFile and serialize
-		//outFile = (OutputStream) serializer.deserialize();
-		outFile = new FileOutputStream(fileName);
-		outFile.write(arg0);
-		//serializer.serialize(outFile);
+		outFile = new FileOutputStream(fileName, true);
 		
-		// Close file so it can be used by other processes
+		// Update position
+		outFile.getChannel().position(position);
+		
+		// Perform write
+		outFile.write(b);
+		
+		// Save position
+		this.position = outFile.getChannel().position();
+				
+		// Close outFile so other processes can use it
 		outFile.close();
 	}
 	
