@@ -63,15 +63,16 @@ public class ProcessManager {
 		Thread thread = pair.getThread();
 		
 		// Suspend and serialize
-		process.suspend();
+		process.suspend(); // TODO why not store suspend flag
 		
 		// Serialize (and generate unique serialization filename)
 		String uid = Integer.toString(process.hashCode());
 		Serializer serializer = new Serializer(uid);
-		serializer.serialize(uid);
+		serializer.serialize(process);
 		
 		// Terminate the thread, join to ensure completed
-		process.run(); // TODO should be suspended
+		// process.run(); 
+		// TODO should be suspended
 		try {
 			thread.join(THREAD_JOIN_TIME);
 		} catch (InterruptedException e) {
@@ -81,7 +82,7 @@ public class ProcessManager {
 		// Deserialize the process and start a new thread
 		process = (MigratableProcess) serializer.deserialize();
 		Thread newThread = new Thread(process);
-		newThread.start();
+		newThread.start(); // TODO does not seem to run the process
 		
 	}
 	

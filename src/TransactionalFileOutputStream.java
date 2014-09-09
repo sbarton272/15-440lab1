@@ -14,18 +14,17 @@ import java.io.Serializable;
 public class TransactionalFileOutputStream extends OutputStream implements Serializable {
 
 	private static final long serialVersionUID = -3557579291611635226L;
-	private String fileName;
-	private long position;
-	private FileOutputStream outFile;
+	private String mFileName;
+	private long mPosition;
 	
 	public TransactionalFileOutputStream(String fileName, boolean append) throws FileNotFoundException {
-		this.fileName = fileName;
+		this.mFileName = fileName;
 		
-		outFile = new FileOutputStream(fileName, append);
+		FileOutputStream outFile = new FileOutputStream(mFileName, append);
 		
 		// Get start position
 		try {
-			this.position = outFile.getChannel().position();
+			this.mPosition = outFile.getChannel().position();
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
@@ -44,16 +43,16 @@ public class TransactionalFileOutputStream extends OutputStream implements Seria
 		// TODO does process ever close?
         
 		// Always append on these writes
-		outFile = new FileOutputStream(fileName, true);
+		FileOutputStream outFile = new FileOutputStream(mFileName, true);
 		
 		// Update position
-		outFile.getChannel().position(position);
+		outFile.getChannel().position(mPosition);
 		
 		// Perform write
 		outFile.write(b);
 		
 		// Save position
-		this.position = outFile.getChannel().position();
+		this.mPosition = outFile.getChannel().position();
 				
 		// Close outFile so other processes can use it
 		outFile.close();

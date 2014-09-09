@@ -8,18 +8,17 @@ import java.io.Serializable;
 public class TransactionalFileInputStream extends InputStream implements Serializable {
 
 	private static final long serialVersionUID = -9067377820514406998L;
-	private String fileName;
-	private long position;
-	private FileInputStream inFile;
+	private String mFileName;
+	private long mPosition;
 
 	public TransactionalFileInputStream(String fileName) throws FileNotFoundException {
-		this.fileName = fileName;
+		this.mFileName = fileName;
 		
-		inFile = new FileInputStream(fileName);
+		FileInputStream inFile = new FileInputStream(mFileName);
 		
 		// Get start position
 		try {
-			this.position = inFile.getChannel().position();
+			this.mPosition = inFile.getChannel().position();
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
@@ -35,16 +34,16 @@ public class TransactionalFileInputStream extends InputStream implements Seriali
 	@Override
 	public int read() throws IOException {
 		
-		inFile = new FileInputStream(fileName);
+		FileInputStream inFile = new FileInputStream(mFileName);
 		
 		// Update position
-		inFile.getChannel().position(position);
+		inFile.getChannel().position(mPosition);
 		
 		// Read
 		int readInt = inFile.read();
 		
 		// Save position
-		this.position = inFile.getChannel().position();
+		this.mPosition = inFile.getChannel().position();
 		
 		// Close inFile so other processes can use it
 		try {

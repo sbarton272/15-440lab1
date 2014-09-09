@@ -10,7 +10,7 @@ public class lab1 {
 		
 		int grepPid = processManager.launch(grepProcess);
 		Thread.sleep(10);
-		//processManager.migrate(grepPid);
+		processManager.migrate(grepPid);
 		
 	}
 	
