@@ -15,18 +15,15 @@ public class TransactionalFileOutputStream extends OutputStream implements Seria
 
 	private static final long serialVersionUID = -3557579291611635226L;
 	private String fileName;
-	private boolean append;
 	private long position;
 	private FileOutputStream outFile;
 	
 	public TransactionalFileOutputStream(String fileName, boolean append) throws FileNotFoundException {
-		// TODO what is boolean for?
 		this.fileName = fileName;
-		this.append = append;
 		
 		outFile = new FileOutputStream(fileName, append);
 		
-		// Get position
+		// Get start position
 		try {
 			this.position = outFile.getChannel().position();
 		} catch (IOException e1) {
@@ -46,6 +43,7 @@ public class TransactionalFileOutputStream extends OutputStream implements Seria
 		// TODO optimize by leaving open unless migrated
 		// TODO does process ever close?
         
+		// Always append on these writes
 		outFile = new FileOutputStream(fileName, true);
 		
 		// Update position

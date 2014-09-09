@@ -1,4 +1,3 @@
-import java.io.FileInputStream;
 import java.io.PrintStream;
 import java.io.EOFException;
 import java.io.InputStreamReader;
@@ -10,7 +9,7 @@ import java.lang.InterruptedException;
 public class GrepProcess implements MigratableProcess
 {
 	private static final long serialVersionUID = -2757242538506557482L;
-	private FileInputStream  inFile;
+	private TransactionalFileInputStream  inFile;
 	private TransactionalFileOutputStream outFile;
 	private String query;
 
@@ -24,7 +23,7 @@ public class GrepProcess implements MigratableProcess
 		}
 		
 		query = args[0];
-		inFile = new FileInputStream(args[1]);//TransactionalFileInputStream(args[1]);
+		inFile = new TransactionalFileInputStream(args[1]);
 		outFile = new TransactionalFileOutputStream(args[2], false);
 	}
 
