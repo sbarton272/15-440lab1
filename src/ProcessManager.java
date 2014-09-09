@@ -47,7 +47,22 @@ public class ProcessManager {
 	 * @param pid
 	 */
 	public void remove(int pid) {
+		ThreadRunnablePair pair = mThreadsMap.get(pid);
+		MigratableProcess process = (MigratableProcess) pair.getRunnable();
+		Thread thread = pair.getThread();
 		
+		// Suspend which terminates
+		System.out.println("SUSPENDING");
+		process.suspend();
+		System.out.println("SUSPENDING DONE");
+		
+		// Terminate the thread, join to ensure completed
+		try {
+			thread.join(THREAD_JOIN_TIME);
+			System.out.println("REMOVED: " + pid);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	/**
@@ -71,8 +86,6 @@ public class ProcessManager {
 		serializer.serialize(process);
 		
 		// Terminate the thread, join to ensure completed
-		// process.run(); 
-		// TODO should be suspended
 		try {
 			thread.join(THREAD_JOIN_TIME);
 			System.out.println("REALLY DONE");

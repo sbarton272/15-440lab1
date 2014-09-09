@@ -11,6 +11,8 @@ public class lab1 {
 		int grepPid = processManager.launch(grepProcess);
 		Thread.sleep(500);
 		processManager.migrate(grepPid);
+		Thread.sleep(1000);
+		processManager.remove(grepPid);
 		
 	}
 	

@@ -32,17 +32,14 @@ public class GrepProcess implements MigratableProcess
 		TransactionalFileInputStream in = inFile;
 
 		try {
-			System.out.println(suspending);
 			while (!suspending) {
-				
+				System.out.println("Still going");
 				String line = in.readline(); 
 				
 				if (line == null) break;
 				
-				System.out.println(">" + line);
-
 				if (line.contains(query)) {
-					out.println(line);
+					out.print(line);
 				}
 				
 				// Make grep take longer so that we don't require extremely large files for interesting results
