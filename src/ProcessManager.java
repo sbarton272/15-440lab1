@@ -97,8 +97,12 @@ public class ProcessManager {
 		process = (MigratableProcess) serializer.deserialize();
 		Thread newThread = new Thread(process);
 		System.out.println("RESTART");
-		newThread.start(); // TODO does not seem to run the process
 		
+		// Store reference to process
+		mThreadsMap.put(pid, new ThreadRunnablePair(newThread, process));
+
+		newThread.start(); // TODO does not seem to run the process
+
 	}
 	
 	/**

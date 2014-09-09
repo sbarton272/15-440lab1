@@ -33,7 +33,6 @@ public class GrepProcess implements MigratableProcess
 
 		try {
 			while (!suspending) {
-				System.out.println("Still going");
 				String line = in.readline(); 
 				
 				if (line == null) break;
@@ -64,8 +63,9 @@ public class GrepProcess implements MigratableProcess
 	{
 		suspending = true;
 		
-		System.out.println("SUSPENDED");
+		System.out.println("SUSPENDED" + suspending);
 		while (suspending);
+		System.out.println("NOT SUSPENDED");
 	}
 
 }
