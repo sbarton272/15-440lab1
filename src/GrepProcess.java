@@ -1,7 +1,5 @@
 import java.io.PrintStream;
 import java.io.EOFException;
-import java.io.InputStreamReader;
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.lang.Thread;
 import java.lang.InterruptedException;
@@ -29,18 +27,21 @@ public class GrepProcess implements MigratableProcess
 
 	public void run()
 	{
+		
 		PrintStream out = new PrintStream(outFile);
-		BufferedReader in = new BufferedReader(new InputStreamReader(inFile));
+		TransactionalFileInputStream in = inFile;
 
 		try {
+			System.out.println(suspending);
 			while (!suspending) {
-				String line = in.readLine();
-
+				
+				String line = in.readline(); 
+				
 				if (line == null) break;
-				System.out.println(line);
+				
+				System.out.println(">" + line);
 
 				if (line.contains(query)) {
-					System.out.println("FOUND");
 					out.println(line);
 				}
 				
@@ -53,17 +54,20 @@ public class GrepProcess implements MigratableProcess
 			}
 		} catch (EOFException e) {
 			//End of File
+			System.out.println("EOF");
 		} catch (IOException e) {
-			System.out.println ("GrepProcess: Error: " + e);
+			System.out.println("GrepProcess: Error: " + e);
 		}
 
-
+		System.out.println("DONE");
 		suspending = false;
 	}
 
 	public void suspend()
 	{
 		suspending = true;
+		
+		System.out.println("SUSPENDED");
 		while (suspending);
 	}
 

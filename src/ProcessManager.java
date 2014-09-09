@@ -75,6 +75,7 @@ public class ProcessManager {
 		// TODO should be suspended
 		try {
 			thread.join(THREAD_JOIN_TIME);
+			System.out.println("REALLY DONE");
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -82,6 +83,7 @@ public class ProcessManager {
 		// Deserialize the process and start a new thread
 		process = (MigratableProcess) serializer.deserialize();
 		Thread newThread = new Thread(process);
+		System.out.println("RESTART");
 		newThread.start(); // TODO does not seem to run the process
 		
 	}

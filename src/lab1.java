@@ -9,7 +9,7 @@ public class lab1 {
 		MigratableProcess grepProcess = new GrepProcess(grepArgs);
 		
 		int grepPid = processManager.launch(grepProcess);
-		Thread.sleep(10);
+		Thread.sleep(500);
 		processManager.migrate(grepPid);
 		
 	}

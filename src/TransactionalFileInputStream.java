@@ -1,3 +1,4 @@
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -36,6 +37,8 @@ public class TransactionalFileInputStream extends InputStream implements Seriali
 		
 		FileInputStream inFile = new FileInputStream(mFileName);
 		
+		//System.out.println(mPosition);
+		
 		// Update position
 		inFile.getChannel().position(mPosition);
 		
@@ -55,4 +58,23 @@ public class TransactionalFileInputStream extends InputStream implements Seriali
 		return readInt;
 	}
 
+	public String readline() throws IOException {
+		// Read line without buffering
+		ByteArrayOutputStream byteLine = new ByteArrayOutputStream();
+		int b;
+		for( b = this.read(); b != '\n' && b != '\r' && b != -1; b = this.read()) {
+			byteLine.write(b);
+		}
+	
+		// Done
+		if (b == -1 && byteLine.size() == 0 ) { 
+			return null;
+		}
+	
+		// Form line
+		// TODO determine line endings
+		byteLine.write('\n');
+		return byteLine.toString("UTF-8");
+	}
+	
 }
