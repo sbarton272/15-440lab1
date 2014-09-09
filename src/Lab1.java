@@ -1,10 +1,7 @@
-package client;
-
 import migratableprocess.FindReplaceProcess;
 import migratableprocess.GrepProcess;
 import migratableprocess.MigratableProcess;
 import migratableprocess.WriteFibProcess;
-import server.ProcessManager;
 
 public class Lab1 {
 	
@@ -14,6 +11,9 @@ public class Lab1 {
 			System.out.println("usage: Lab1 <host> <port>");
 			throw new Exception("Invalid Arguments");
 		}
+		
+		// TODO instantiate Process manager
+		// TODO provide cmd line UI: add worker, 3 cmds with process, poll pid state 
 		
 		// Create client object to handle transactions
 		String host = args[0];
