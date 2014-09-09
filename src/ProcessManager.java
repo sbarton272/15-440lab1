@@ -5,7 +5,8 @@ import java.util.Map;
  * ProcessManager controls the threads being used to run the various processes
  * 
  * TODO
- * - Get grep to run to completion
+ * - Migrate
+ * - Remove
  * - Catch death incident
  * - Cleanup completed threads
  * - Name member variables with m in front
@@ -15,10 +16,11 @@ import java.util.Map;
  */
 public class ProcessManager {
 
-	private Map<Integer, java.lang.Thread> threadsMap;
+	private static final int THREAD_JOIN_TIME = 100;
+	private Map<Integer, ThreadRunnablePair> mThreadsMap;
 	
 	public ProcessManager() {
-		threadsMap = new HashMap<Integer, Thread>(); 
+		mThreadsMap = new HashMap<Integer, ThreadRunnablePair>(); 
 	}
 	
 	/**
@@ -32,8 +34,8 @@ public class ProcessManager {
 		Thread thread = new Thread(process);
 		int pid = thread.hashCode();
 		
-		// Store reference to thread
-		threadsMap.put(pid, thread);
+		// Store reference to process
+		mThreadsMap.put(pid, new ThreadRunnablePair(thread, process));
 		
 		thread.start();
 		return pid;
@@ -55,6 +57,53 @@ public class ProcessManager {
 	 */
 	public void migrate(int pid) {
 		
+		// Extract process and thread from pid
+		ThreadRunnablePair pair = mThreadsMap.get(pid);
+		MigratableProcess process = (MigratableProcess) pair.getRunnable();
+		Thread thread = pair.getThread();
+		
+		// Suspend and serialize
+		process.suspend();
+		
+		// Serialize (and generate unique serialization filename)
+		String uid = Integer.toString(process.hashCode());
+		Serializer serializer = new Serializer(uid);
+		serializer.serialize(uid);
+		
+		// Terminate the thread, join to ensure completed
+		process.run(); // TODO should be suspended
+		try {
+			thread.join(THREAD_JOIN_TIME);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		
+		// Deserialize the process and start a new thread
+		process = (MigratableProcess) serializer.deserialize();
+		Thread newThread = new Thread(process);
+		newThread.start();
+		
+	}
+	
+	/**
+	 * Used to store thread and its runnable in a tuple
+	 */
+	private class ThreadRunnablePair {
+		private Thread mThread;
+		private Runnable mRunnable;
+		
+		public ThreadRunnablePair(Thread thread, Runnable runnable) {
+			mThread = thread;
+			mRunnable = runnable;
+		}
+		
+		public Thread getThread() {
+			return mThread;
+		}
+		
+		public Runnable getRunnable() {
+			return mRunnable;
+		}
 	}
 	
 }

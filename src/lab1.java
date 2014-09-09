@@ -5,10 +5,12 @@ public class lab1 {
 		
 		ProcessManager processManager = new ProcessManager();
 
-		String[] grepArgs = {"aa", "test/grep.txt", "test/grepOut.txt"};
+		String[] grepArgs = {"aa", "test/grep.txt", "test/grepOut2.txt"};
 		MigratableProcess grepProcess = new GrepProcess(grepArgs);
 		
-		processManager.launch(grepProcess);
+		int grepPid = processManager.launch(grepProcess);
+		Thread.sleep(10);
+		//processManager.migrate(grepPid);
 		
 	}
 	
