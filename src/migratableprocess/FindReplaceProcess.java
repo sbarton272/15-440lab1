@@ -45,7 +45,7 @@ public class FindReplaceProcess implements MigratableProcess {
 				if (line == null) break;
 
 				// Find and replace
-				out.print(line.replace(query, replacement));
+				out.print(line.replace(query, replacement) + '\r'); // TODO loses newlines
 				
 				// Make take longer so that we don't require extremely large files for interesting results
 				try {

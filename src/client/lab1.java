@@ -1,14 +1,24 @@
 package client;
-import server.ProcessManager;
+
 import migratableprocess.FindReplaceProcess;
 import migratableprocess.GrepProcess;
 import migratableprocess.MigratableProcess;
 import migratableprocess.WriteFibProcess;
+import server.ProcessManager;
 
-
-public class lab1 {
-
+public class Lab1 {
+	
 	public static void main(String [ ] args) throws Exception {
+		
+		if (args.length != 2) {
+			System.out.println("usage: Lab1 <host> <port>");
+			throw new Exception("Invalid Arguments");
+		}
+		
+		// Create client object to handle transactions
+		String host = args[0];
+		int port = Integer.parseInt(args[1]);
+		Client client = new Client(host, port);
 		
 		ProcessManager processManager = new ProcessManager();
 
@@ -34,5 +44,4 @@ public class lab1 {
 		processManager.launch(findReplaceProcess);
 		
 	}
-	
 }
