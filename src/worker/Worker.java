@@ -1,9 +1,11 @@
 package worker;
+
 import helper.Serializer;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
+import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
@@ -11,86 +13,136 @@ import java.util.Map;
 
 import message.LaunchMessage;
 import message.Message;
+import message.ResponseMessage;
 import migratableprocess.MigratableProcess;
 
 /**
  * ProcessManager controls the threads being used to run the various processes
  * 
  * @author Spencer
- *
+ * 
  */
 public class Worker {
 
-	private static final int THREAD_JOIN_TIME = 100;
-	private Map<Integer, ThreadRunnablePair> mThreadsMap;
-	
-	public Worker() {
-		mThreadsMap = new HashMap<Integer, ThreadRunnablePair>(); 
-	}
-	
-	public static void main(String [ ] args) {
-		
+	public static void main(String[] args) throws Exception {
+
 		if (args.length != 1) {
 			System.out.println("usage: Worker <listeningPort>");
 			throw new Exception("Invalid Arguments");
 		}
+
+		// Create socket to listen on
+		int port = Integer.parseInt(args[0]);
+		ServerSocket listeningSoc = new ServerSocket(port);
+
+		System.out.println("Worker listening on " + InetAddress.getLocalHost() + ":" + port);
 		
-		ServerSocket listeningSoc = new ServerSocket(Integer.parseInt(args[0]));
-		
+		// Create message handler
+		MessageHandler messageHandler = new MessageHandler();
+
 		// Sit in main loop waiting to deal with requests
-		while (true) {
-            
-    		// Get something on the socket and push off to thread to deal with it
-            Socket connected = listeningSoc.accept();
-            new commandParser(connected).start();
+		while (!Thread.currentThread().isInterrupted()) {
+
+			// Get something on the socket and push off to thread to deal with
+			// it
+			Socket connected = listeningSoc.accept();
+			messageHandler.handleMessage(connected);
+
 		}
-		
-    }
+
+		// Close socket on interrupt
+		listeningSoc.close();
+	}
 }
 
-class commandParser extends Thread {
+class MessageHandler {
 
-	public commandParser(Socket connected) {
-		System.out.println("Command recieved from " + connected.getInetAddress() + ": " + connected.getPort());
+	private static final int THREAD_JOIN_TIME = 100;
+	private Map<Integer, ThreadRunnablePair> mThreadsMap;
+
+	public MessageHandler() {
+		mThreadsMap = new HashMap<Integer, ThreadRunnablePair>();
+	}
+
+	public void handleMessage(Socket connected) {
+		System.out.println("Command recieved from "
+				+ connected.getInetAddress() + ": " + connected.getPort());
 
 		// Read in object
-		ObjectInputStream objInput = new ObjectInputStream(connected.getInputStream());
-		Message msg = (Message) objInput.readObject();
-		objInput.close();
-		
-		// Parse out correct message and run command
-		
-		// Catch launch event
-		if (msg instanceof LaunchMessage) {
+		try {
+			System.out.println("CLOSED? " + connected.isClosed());
 			
+			ObjectInputStream objInput = new ObjectInputStream(
+					connected.getInputStream());
+			Message msg = (Message) objInput.readObject();
+			
+			System.out.println("CLOSED? " + connected.isClosed());
+
+			// Parse out correct message and run command
+			// Catch launch event
+			if (msg instanceof LaunchMessage) {
+				System.out.println("Recieved Launch Message");
+
+				// Launch the given process on a new thread
+				launch(((LaunchMessage) msg).getProcess());
+				
+				System.out.println("CLOSED? " + connected.isClosed());
+
+				// Respond with success message
+				sendResponse(connected, true);
+				
+				// Close connections
+				objInput.close();
+				connected.close();
+
+			}
+
+			// Catch remove event
+
+			// Catch migrate event
+
+		} catch (IOException | ClassNotFoundException e) {
+			// TODO not well handled
+			e.printStackTrace();
 		}
-		
-		// Contains pid and process
-		
-		// Catch remove event
-		
-		// Catch migrate event
-		
+	}
+
+	/**
+	 * Write back response message on socket and close the socket
+	 * 
+	 * @param connected
+	 * @param success
+	 * @throws IOException
+	 */
+	private void sendResponse(Socket connected, boolean success)
+			throws IOException {
+		ObjectOutputStream workerOutStream = new ObjectOutputStream(
+				connected.getOutputStream());
+		workerOutStream.writeObject(new ResponseMessage(success));
+		workerOutStream.close();
 	}
 
 	/**
 	 * Create a new thread and start its runnable process
 	 * 
-	 * @param process MigratableProcess
-	 * @param argStrs Array of string arguments for process
+	 * @param process
+	 *            MigratableProcess
 	 * @return process id int
 	 */
 	public int launch(MigratableProcess process) {
 		Thread thread = new Thread(process);
-		int pid = thread.hashCode();
-		
+		int pid = process.getPid();
+
 		// Store reference to process
 		mThreadsMap.put(pid, new ThreadRunnablePair(thread, process));
-		
+
 		thread.start();
+		
+		System.out.println("LAUNCHED " + pid);
+
 		return pid;
 	}
- 	
+
 	/**
 	 * Stop the given process and remove the thread
 	 * 
@@ -100,12 +152,12 @@ class commandParser extends Thread {
 		ThreadRunnablePair pair = mThreadsMap.get(pid);
 		MigratableProcess process = (MigratableProcess) pair.getRunnable();
 		Thread thread = pair.getThread();
-		
+
 		// Suspend which terminates
 		System.out.println("SUSPENDING");
 		process.suspend();
 		System.out.println("SUSPENDING DONE");
-		
+
 		// Terminate the thread, join to ensure completed
 		try {
 			thread.join(THREAD_JOIN_TIME);
@@ -114,27 +166,28 @@ class commandParser extends Thread {
 			e.printStackTrace();
 		}
 	}
-	
+
 	/**
-	 * Suspend the given process, serialize the process and transfer to a new thread 
+	 * Suspend the given process, serialize the process and transfer to a new
+	 * thread
 	 * 
 	 * @param pid
 	 */
 	public void migrate(int pid) {
-		
+
 		// Extract process and thread from pid
 		ThreadRunnablePair pair = mThreadsMap.get(pid);
 		MigratableProcess process = (MigratableProcess) pair.getRunnable();
 		Thread thread = pair.getThread();
-		
+
 		// Suspend and serialize
 		process.suspend(); // TODO why not store suspend flag
-		
+
 		// Serialize (and generate unique serialization filename)
 		String uid = Integer.toString(process.hashCode());
 		Serializer serializer = new Serializer(uid);
 		serializer.serialize(process);
-		
+
 		// Terminate the thread, join to ensure completed
 		try {
 			thread.join(THREAD_JOIN_TIME);
@@ -142,38 +195,38 @@ class commandParser extends Thread {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		
+
 		// Deserialize the process and start a new thread
 		process = (MigratableProcess) serializer.deserialize();
 		Thread newThread = new Thread(process);
 		System.out.println("RESTART");
-		
+
 		// Store reference to process
 		mThreadsMap.put(pid, new ThreadRunnablePair(newThread, process));
 
 		newThread.start(); // TODO does not seem to run the process
 
 	}
-	
+
 	/**
 	 * Used to store thread and its runnable in a tuple
 	 */
 	private class ThreadRunnablePair {
 		private Thread mThread;
 		private Runnable mRunnable;
-		
+
 		public ThreadRunnablePair(Thread thread, Runnable runnable) {
 			mThread = thread;
 			mRunnable = runnable;
 		}
-		
+
 		public Thread getThread() {
 			return mThread;
 		}
-		
+
 		public Runnable getRunnable() {
 			return mRunnable;
 		}
 	}
-	
+
 }

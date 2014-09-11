@@ -25,12 +25,12 @@ public class ProcessManager {
 	
 	public int launch(String host, int port, MigratableProcess process) {
 		System.out.println("LAUNCH: " + host + ":" + Integer.toString(port));
+
+		// Generate pid
+		int pid = process.hashCode();
+		process.setPid(pid);
 		
 		try {
-			
-			// Generate pid
-			int pid = process.hashCode();
-			process.setPid(pid);
 			
 			// Open socket to given worker
 			Socket soc = new Socket(host, port);
@@ -38,7 +38,6 @@ public class ProcessManager {
 			// Send process to worker in serialized form
 			ObjectOutputStream  workerOutStream = new ObjectOutputStream(soc.getOutputStream());
 			workerOutStream.writeObject(new LaunchMessage(process));
-			workerOutStream.close();
 			
 			// Wait on response from worker
 			ObjectInputStream workerInStream = new ObjectInputStream(soc.getInputStream());
@@ -49,7 +48,8 @@ public class ProcessManager {
 				
 				// If success store pid -> worker and set pid
 				if (response.isSuccess()) {
-					
+					System.out.println("LAUNCH SUCCESS: " + host + ":" + Integer.toString(port));
+
 					// Store pid -> worker
 					mPidWorkerMap.put(pid, new InetSocketAddress(host, port));
 				} else {
@@ -60,24 +60,31 @@ public class ProcessManager {
 				
 			} catch (ClassNotFoundException e) {
 				e.printStackTrace();
+				
+				// Error case
+				pid = -1;
 			} 
 			
+			workerOutStream.close();
 			workerInStream.close();
 			soc.close();
 		
 		} catch (IOException e) {
 			System.out.println("Cannot connect/send: " + host + ":" + Integer.toString(port));
+			
+			// Error case
+			pid = -1;
 		}
 		// Error case
-		return -1;
+		return pid;
 	}
 	
 	public void remove(int pid) {
-
+		// TODO
 	}
 	
 	public void migrate(int pid) {
-
+		// TODO
 	}
 	
 }

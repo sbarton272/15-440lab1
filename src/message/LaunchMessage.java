@@ -11,7 +11,7 @@ public class LaunchMessage implements Message{
 		mProcess = process;
 	}
 
-	public MigratableProcess getmProcess() {
+	public MigratableProcess getProcess() {
 		return mProcess;
 	}
 
