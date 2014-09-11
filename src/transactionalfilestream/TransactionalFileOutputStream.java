@@ -41,7 +41,6 @@ public class TransactionalFileOutputStream extends OutputStream implements Seria
 	@Override
 	public void write(int b) throws IOException {
 		// TODO optimize by leaving open unless migrated
-		// TODO does process ever close?
         
 		// Always append on these writes
 		FileOutputStream outFile = new FileOutputStream(mFileName, true);

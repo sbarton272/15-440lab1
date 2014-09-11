@@ -1,7 +1,5 @@
 package worker;
 
-import helper.Serializer;
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -181,47 +179,6 @@ class MessageHandler {
 		} catch (InterruptedException e) {
 			return false;
 		}
-	}
-
-	/**
-	 * Suspend the given process, serialize the process and transfer to a new
-	 * thread
-	 * 
-	 * @param pid
-	 */
-	public void migrate(int pid) {
-
-		// Extract process and thread from pid
-		ThreadRunnablePair pair = mThreadsMap.get(pid);
-		MigratableProcess process = (MigratableProcess) pair.getRunnable();
-		Thread thread = pair.getThread();
-
-		// Suspend and serialize
-		process.suspend(); // TODO why not store suspend flag
-
-		// Serialize (and generate unique serialization filename)
-		String uid = Integer.toString(process.hashCode());
-		Serializer serializer = new Serializer(uid);
-		serializer.serialize(process);
-
-		// Terminate the thread, join to ensure completed
-		try {
-			thread.join(THREAD_JOIN_TIME);
-			System.out.println("REALLY DONE");
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-
-		// Deserialize the process and start a new thread
-		process = (MigratableProcess) serializer.deserialize();
-		Thread newThread = new Thread(process);
-		System.out.println("RESTART");
-
-		// Store reference to process
-		mThreadsMap.put(pid, new ThreadRunnablePair(newThread, process));
-
-		newThread.start(); // TODO does not seem to run the process
-
 	}
 
 	/**

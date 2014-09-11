@@ -6,6 +6,11 @@ import migratableprocess.WriteFibProcess;
 
 /**
  * TODO cleanup try/catch
+ * TODO debug remove
+ * TODO debug migrate
+ * TODO test with remaining
+ * TODO build command line interface
+ * TODO get working on GHC machines
  * 
  * @author Spencer
  *
