@@ -96,7 +96,7 @@ public class ProcessManager {
 		// Lookup worker, print error if not alive
 		InetSocketAddress workerAddr = mPidWorkerMap.get(pid);
 		if (workerAddr == null) {
-			System.out.println("Process is dead or non-existant: " + pid);
+			System.out.println("REMOVE FAILURE: Process is dead or non-existant (" + pid + ")");
 			return null;
 		}
 
@@ -119,6 +119,9 @@ public class ProcessManager {
 			MigratableProcess process = null;
 			if (response.isSuccess()) {
 
+				// Remove from mPidWorkerMap
+				mPidWorkerMap.remove(pid);
+				
 				if (response.isProcessAlive()) {
 
 					// Success so extract process
@@ -126,10 +129,9 @@ public class ProcessManager {
 					
 					System.out.println("REMOVE SUCCESS: (" + pid + ")");
 				} else {
-
-					// If process is dead remove from mPidWorkerMap
-					mPidWorkerMap.remove(pid);
-					System.out.println("Process is dead: " + pid);
+					
+					// If was dead then note this and do not return process
+					System.out.println("Process was already dead: " + pid);
 				}
 
 			} else {

@@ -31,22 +31,31 @@ public class Lab1 {
 		
 		System.out.println("Starting with " + grepProcess);
 		
-		int grepPid = processManager.launch("localhost", 80, grepProcess);
-		Thread.sleep(500);
-		processManager.migrate("localhost", 81, grepPid);
-		Thread.sleep(1000);
-		processManager.remove(grepPid);
-//		
+//		int grepPid = processManager.launch("localhost", 80, grepProcess);
+//		Thread.sleep(500);
+//		processManager.migrate("localhost", 81, grepPid);
+//		Thread.sleep(1000);
+//		processManager.remove(grepPid);
+//		processManager.remove(grepPid);
+//		processManager.migrate("localhost", 80, grepPid);
+//		processManager.launch("localhost", 80, grepProcess);
+
+		
 //		// Try fib process
 //		String[] fibArgs = {"15", "test/fib1.txt"};
 //		MigratableProcess fibProcess = new WriteFibProcess(fibArgs);
 //		
-//		processManager.launch(fibProcess);
-//
-//		// Try FindReplace
-//		String[] replaceArgs = {"aa", "AA", "test/grep.txt", "test/findReplaceOut1.txt"};
-//		MigratableProcess findReplaceProcess = new FindReplaceProcess(replaceArgs);
-//		processManager.launch(findReplaceProcess);
+//		processManager.launch("localhost", 80, fibProcess);
+//		processManager.launch("localhost", 80, fibProcess);
+//		processManager.launch("localhost", 80, fibProcess);
+//		processManager.launch("localhost", 81, fibProcess);
+//		processManager.launch("localhost", 81, fibProcess);
+//		processManager.launch("localhost", 81, fibProcess);
+
+		// Try FindReplace
+		String[] replaceArgs = {"aa", "AA", "test/grep.txt", "test/findReplaceOut1.txt"};
+		MigratableProcess findReplaceProcess = new FindReplaceProcess(replaceArgs);
+		processManager.launch("localhost", 80, findReplaceProcess);
 		
 	}
 }

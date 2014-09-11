@@ -63,17 +63,13 @@ public class WriteFibProcess extends MigratableProcess {
 			}
 		}
 
-		System.out.println("DONE");
 		suspending = false;
 	}
 
 	public void suspend()
 	{
 		suspending = true;
-		
-		System.out.println("SUSPENDED" + suspending);
 		while (suspending);
-		System.out.println("NOT SUSPENDED");
 	}
 
 	public String toString() {

@@ -49,11 +49,11 @@ public class FindReplaceProcess extends MigratableProcess {
 				if (line == null) break;
 
 				// Find and replace
-				out.print(line.replace(query, replacement) + '\r');
+				out.println(line.replace(query, replacement));
 				
 				// Make take longer so that we don't require extremely large files for interesting results
 				try {
-					Thread.sleep(100);
+					Thread.sleep(10);
 				} catch (InterruptedException e) {
 					// ignore it
 				}
@@ -65,17 +65,13 @@ public class FindReplaceProcess extends MigratableProcess {
 			System.out.println("GrepProcess: Error: " + e);
 		}
 
-		System.out.println("DONE");
 		suspending = false;
 	}
 
 	public void suspend()
 	{
-		suspending = true;
-		
-		System.out.println("SUSPENDED" + suspending);
+		suspending = true;		
 		while (suspending);
-		System.out.println("NOT SUSPENDED");
 	}
 	
 	public String toString() {

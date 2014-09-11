@@ -71,8 +71,8 @@ class MessageHandler {
 	}
 
 	public void handleRequest(Socket connected) {
-		System.out.println("Command recieved from "
-				+ connected.getInetAddress() + ": " + connected.getPort());
+		System.out.println("REQUEST RECIEVED: "
+				+ connected.getInetAddress() + ":" + connected.getPort());
 
 		try {
 
@@ -146,7 +146,7 @@ class MessageHandler {
 		
 		// Catch remove event
 		int pid = ((RemoveRequest) msg).getPid();
-		System.out.println("REMOVE REQUEST (" + pid + ")");
+		System.out.println("REMOVE REQUEST: " + pid + "");
 
 		if (!mThreadsMap.containsKey(pid)) {
 
