@@ -11,12 +11,12 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 
-import message.LaunchMessage;
-import message.Message;
-import message.ProcessDeadResponse;
-import message.RemoveMessage;
+import message.LaunchResponse;
+import message.LaunchRequest;
+import message.RemoveRequest;
+import message.RemoveResponse;
 import message.RequestMessage;
-import message.Response;
+import message.ResponseMessage;
 import migratableprocess.MigratableProcess;
 
 /**
@@ -74,43 +74,41 @@ class MessageHandler {
 
 		// Read in object
 		try {
-			System.out.println("CLOSED? " + connected.isClosed());
-			
+
+			// Open stream and read request
 			ObjectInputStream objInput = new ObjectInputStream(
 					connected.getInputStream());
 			RequestMessage msg = (RequestMessage) objInput.readObject();
 			
-			System.out.println("CLOSED? " + connected.isClosed());
-
 			// Parse out correct message and run command
 			if (msg.isLaunch()) {
 
 				// Catch launch event
-				System.out.println("Recieved Launch Message");
+				System.out.println("Recieved Launch Request");
 
 				// Launch the given process on a new thread
-				launch(((LaunchMessage) msg).getProcess());
+				int pid = launch(((LaunchRequest) msg).getProcess());
 				
 				// Respond with success message
-				sendResponse(connected, new Response());
+				sendResponse(connected, new LaunchResponse(true, pid));
 
 			}
 			else if (msg.isRemove()) {
 
 				// Catch remove event
-				int pid = ((RemoveMessage) msg).getPid();
-				System.out.println("Recieved Remove Message " + pid);
+				int pid = ((RemoveRequest) msg).getPid();
+				System.out.println("Recieved Remove Request " + pid);
 
 				// If pid not running on a thread return dead message
 				if (!mThreadsMap.containsKey(pid)) {
-					sendResponse(connected, new ProcessDeadResponse(pid));
+					sendResponse(connected, new RemoveResponse(true));
 				} else {
 				
 				// Launch the given process on a new thread
 				boolean success = remove(pid);
 
 				// Respond with success message
-				sendResponse(connected, new Response(success));
+				sendResponse(connected, new RemoveResponse(success));
 				
 				}
 			}
@@ -132,7 +130,7 @@ class MessageHandler {
 	 * @param proccessDeadResponse
 	 * @throws IOException
 	 */
-	private void sendResponse(Socket connected, Response response)
+	private void sendResponse(Socket connected, ResponseMessage response)
 			throws IOException {
 		ObjectOutputStream workerOutStream = new ObjectOutputStream(
 				connected.getOutputStream());

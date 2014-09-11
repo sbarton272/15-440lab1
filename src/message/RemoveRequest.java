@@ -1,11 +1,11 @@
 package message;
 
-public class RemoveMessage extends RequestMessage {
+public class RemoveRequest extends RequestMessage {
 
 	private static final long serialVersionUID = -3317488367302054417L;
 	private int mPid;
 	
-	public RemoveMessage(int pid) {
+	public RemoveRequest(int pid) {
 		mPid = pid;
 	}
 

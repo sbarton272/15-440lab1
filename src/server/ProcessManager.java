@@ -7,10 +7,10 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.HashMap;
 
-import message.LaunchMessage;
-import message.ProcessDeadResponse;
-import message.RemoveMessage;
-import message.Response;
+import message.LaunchRequest;
+import message.LaunchResponse;
+import message.RemoveRequest;
+import message.RemoveResponse;
 import migratableprocess.MigratableProcess;
 
 /**
@@ -42,7 +42,7 @@ public class ProcessManager {
 			// Send process to worker in serialized form
 			ObjectOutputStream workerOutStream = new ObjectOutputStream(
 					soc.getOutputStream());
-			workerOutStream.writeObject(new LaunchMessage(process));
+			workerOutStream.writeObject(new LaunchRequest(process));
 
 			// Wait on response from worker
 			ObjectInputStream workerInStream = new ObjectInputStream(
@@ -50,7 +50,7 @@ public class ProcessManager {
 			try {
 
 				// blocks here
-				Response response = (Response) workerInStream
+				LaunchResponse response = (LaunchResponse) workerInStream
 						.readObject();
 
 				// If success store pid -> worker and set pid
@@ -104,7 +104,7 @@ public class ProcessManager {
 					workerAddr.getPort());
 
 			// Attempt communication over socket. Send request, receive response
-			Response response = sendRemove(workerSoc, pid);
+			RemoveResponse response = sendRemove(workerSoc, pid);
 
 			// If response is null we had an error
 			if (response == null) {
@@ -112,55 +112,54 @@ public class ProcessManager {
 						.println("Unable to send request or recieve response");
 				return null;
 			}
-			
+
 			MigratableProcess process = null;
 			if (response.isSuccess()) {
-				
-				// Success so extract process
-				process = response.getProcess();
-			}
-			else if (response.isFailure()) {
-				// Error print that error occurred
-				
-				// If process is dead remove from mPidWorkerMap
-				if (response instanceof ProcessDeadResponse) {
-					int deadPid = ((ProcessDeadResponse) response)
-							.getPid();
-					if (deadPid == pid) {
-						mPidWorkerMap.remove(deadPid);
-						System.out.println("Process is dead: " + deadPid);
-						
-					} else {
 
-						// Error case
-						System.out.println("Invalid response from worker");
-					}
+				if (response.isProcessAlive()) {
+
+					// Success so extract process
+					process = response.getProcess();
+				} else {
+
+					// If process is dead remove from mPidWorkerMap
+					mPidWorkerMap.remove(pid);
+					System.out.println("Process is dead: " + pid);
 				}
+
+			} else {
+				// Print that error occurred
+				System.out.println("Invalid response from worker");
 			}
 
 			workerSoc.close();
+
+			// Potential success at this return
+			return process;
 
 		} catch (IOException e) {
 			System.out.println("Unable to connect to worker: "
 					+ workerAddr.getHostString() + ":" + workerAddr.getPort());
 		}
 
+		// Other error case
 		return null;
+
 	}
 
-	private Response sendRemove(Socket workerSoc, int pid) {
+	private RemoveResponse sendRemove(Socket workerSoc, int pid) {
 		// Attempt communication over socket. Send request, receive response
 		try {
 
 			// Send remove message with pid
 			ObjectOutputStream workerOutStream = new ObjectOutputStream(
 					workerSoc.getOutputStream());
-			workerOutStream.writeObject(new RemoveMessage(pid));
+			workerOutStream.writeObject(new RemoveRequest(pid));
 
 			// Block on response
 			ObjectInputStream workerInStream = new ObjectInputStream(
 					workerSoc.getInputStream());
-			Response response = (Response) workerInStream
+			RemoveResponse response = (RemoveResponse) workerInStream
 					.readObject();
 
 			// Close streams
@@ -175,23 +174,27 @@ public class ProcessManager {
 
 	/**
 	 * 
-	 * @param host host of new worker
-	 * @param port port of new worker
-	 * @param pid process id
+	 * @param host
+	 *            host of new worker
+	 * @param port
+	 *            port of new worker
+	 * @param pid
+	 *            process id
 	 */
 	public void migrate(String host, int port, int pid) {
 
 		// Remove process from first worker
 		MigratableProcess process = remove(pid);
-		
+
 		if (process == null) {
-			System.out.println("Unable to remove process from original worker " + pid);
+			System.out.println("Unable to remove process from original worker "
+					+ pid);
 			return;
 		}
 
 		// Launch process on second worker
 		launch(host, port, process);
-		
+
 	}
 
 }

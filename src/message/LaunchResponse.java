@@ -1,13 +1,13 @@
 package message;
 
 
-public class LaunchResponse extends Response {
+public class LaunchResponse extends ResponseMessage {
 
 	private static final long serialVersionUID = 6344213116880521650L;
 	private int mPid;
 	
-	public ProcessDeadResponse(int pid) {
-		super(false);
+	public LaunchResponse(boolean success, int pid) {
+		super(success);
 		mPid = pid;
 	}
 	
