@@ -118,7 +118,7 @@ class MessageHandler {
 			throws IOException {
 		ObjectOutputStream workerOutStream = new ObjectOutputStream(
 				connected.getOutputStream());
-		workerOutStream.writeObject(new ResponseMessage(success));
+		workerOutStream.writeObject(new ResponseMessage());
 		workerOutStream.close();
 	}
 

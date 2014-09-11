@@ -4,6 +4,12 @@ import migratableprocess.GrepProcess;
 import migratableprocess.MigratableProcess;
 import migratableprocess.WriteFibProcess;
 
+/**
+ * TODO cleanup try/catch
+ * 
+ * @author Spencer
+ *
+ */
 public class Lab1 {
 	
 	public static void main(String [ ] args) throws Exception {
@@ -21,8 +27,8 @@ public class Lab1 {
 		int grepPid = processManager.launch("localhost", 80, grepProcess);
 //		Thread.sleep(500);
 //		processManager.migrate(grepPid);
-//		//Thread.sleep(1000);
-//		//processManager.remove(grepPid);
+		Thread.sleep(1000);
+		processManager.remove(grepPid);
 //		
 //		// Try fib process
 //		String[] fibArgs = {"15", "test/fib1.txt"};

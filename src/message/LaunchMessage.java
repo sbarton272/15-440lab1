@@ -2,7 +2,7 @@ package message;
 
 import migratableprocess.MigratableProcess;
 
-public class LaunchMessage implements Message{
+public class LaunchMessage implements RequestMessage {
 
 	private static final long serialVersionUID = 5796312885553857386L;
 	private MigratableProcess mProcess;
