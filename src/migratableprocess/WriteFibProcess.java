@@ -2,6 +2,7 @@ package migratableprocess;
 import java.io.PrintStream;
 import java.lang.Thread;
 import java.lang.InterruptedException;
+import java.util.Arrays;
 
 import transactionalfilestream.TransactionalFileOutputStream;
 
@@ -12,7 +13,8 @@ public class WriteFibProcess extends MigratableProcess {
 	private int maxDepth;
 	private int depth;
 	private int[] priorFib; 
-	private String[] args;
+	private String[] mArgs;
+	private static final String PROCESS_NAME = "FindReplaceProcess";
 
 	private volatile boolean suspending;
 
@@ -23,7 +25,7 @@ public class WriteFibProcess extends MigratableProcess {
 			throw new Exception("Invalid Arguments");
 		}
 		
-		this.args = args;
+		mArgs = args;
 		depth = 0;
 		priorFib = new int[2];
 		priorFib[0] = 0;
@@ -74,9 +76,8 @@ public class WriteFibProcess extends MigratableProcess {
 		System.out.println("NOT SUSPENDED");
 	}
 
-	@Override
 	public String toString() {
-		return "WriteFibProcess " + args;
+		return PROCESS_NAME + " " + Arrays.toString(mArgs) + " (" + mPid +")";
 	}
-
+	
 }

@@ -4,6 +4,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.lang.Thread;
 import java.lang.InterruptedException;
+import java.util.Arrays;
 
 import transactionalfilestream.TransactionalFileInputStream;
 import transactionalfilestream.TransactionalFileOutputStream;
@@ -13,9 +14,10 @@ public class GrepProcess extends MigratableProcess {
 	private TransactionalFileInputStream  inFile;
 	private TransactionalFileOutputStream outFile;
 	private String query;
-	private String[] args;
-
 	private volatile boolean suspending;
+
+	private String[] mArgs;
+	private static final String PROCESS_NAME = "FindReplaceProcess";
 
 	public GrepProcess(String args[]) throws Exception
 	{
@@ -24,7 +26,7 @@ public class GrepProcess extends MigratableProcess {
 			throw new Exception("Invalid Arguments");
 		}
 		
-		this.args = args;
+		mArgs = args;
 		query = args[0];
 		inFile = new TransactionalFileInputStream(args[1]);
 		outFile = new TransactionalFileOutputStream(args[2], false);
@@ -73,9 +75,8 @@ public class GrepProcess extends MigratableProcess {
 		System.out.println("NOT SUSPENDED");
 	}
 
-	@Override
 	public String toString() {
-		return "GrepProcess " + args;
+		return PROCESS_NAME + " " + Arrays.toString(mArgs) + " (" + mPid +")";
 	}
-
+	
 }

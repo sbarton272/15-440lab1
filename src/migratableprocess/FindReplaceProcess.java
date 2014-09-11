@@ -4,6 +4,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.lang.Thread;
 import java.lang.InterruptedException;
+import java.util.Arrays;
 
 import transactionalfilestream.TransactionalFileInputStream;
 import transactionalfilestream.TransactionalFileOutputStream;
@@ -15,7 +16,8 @@ public class FindReplaceProcess extends MigratableProcess {
 	private TransactionalFileOutputStream outFile;
 	private String query;
 	private String replacement;
-	private String[] args;
+	private String[] mArgs;
+	private static final String PROCESS_NAME = "FindReplaceProcess";
 	
 	private volatile boolean suspending;
 
@@ -27,7 +29,7 @@ public class FindReplaceProcess extends MigratableProcess {
 			throw new Exception("Invalid Arguments");
 		}
 		
-		this.args = args;
+		mArgs = args;
 		query = args[0];
 		replacement = args[1];
 		inFile = new TransactionalFileInputStream(args[2]);
@@ -75,10 +77,9 @@ public class FindReplaceProcess extends MigratableProcess {
 		while (suspending);
 		System.out.println("NOT SUSPENDED");
 	}
-
-	@Override
+	
 	public String toString() {
-		return "FindReplaceProcess " + args;
+		return PROCESS_NAME + " " + Arrays.toString(mArgs) + " (" + mPid +")";
 	}
 
 }

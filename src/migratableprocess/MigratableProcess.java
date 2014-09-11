@@ -4,7 +4,7 @@ import java.io.Serializable;
 public abstract class MigratableProcess implements Serializable, Runnable {
 	
 	private static final long serialVersionUID = -3105461466732257272L;
-	private int mPid = -1;
+	protected int mPid = -1;
 	
 	/**
 	 * Required by the Runnable interface. This is run when the thread starts.
