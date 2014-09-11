@@ -5,14 +5,14 @@ import java.lang.InterruptedException;
 
 import transactionalfilestream.TransactionalFileOutputStream;
 
-public class WriteFibProcess implements MigratableProcess {
+public class WriteFibProcess extends MigratableProcess {
 	
 	private static final long serialVersionUID = 5119275455400124063L;
 	private TransactionalFileOutputStream outFile;
 	private int maxDepth;
 	private int depth;
 	private int[] priorFib; 
-	private int mPid;
+	private String[] args;
 
 	private volatile boolean suspending;
 
@@ -23,6 +23,7 @@ public class WriteFibProcess implements MigratableProcess {
 			throw new Exception("Invalid Arguments");
 		}
 		
+		this.args = args;
 		depth = 0;
 		priorFib = new int[2];
 		priorFib[0] = 0;
@@ -74,13 +75,8 @@ public class WriteFibProcess implements MigratableProcess {
 	}
 
 	@Override
-	public void setPid(int pid) {
-		mPid = pid;
-	}
-
-	@Override
-	public int getPid() {
-		return mPid;
+	public String toString() {
+		return "WriteFibProcess " + args;
 	}
 
 }

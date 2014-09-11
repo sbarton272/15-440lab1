@@ -8,14 +8,14 @@ import java.lang.InterruptedException;
 import transactionalfilestream.TransactionalFileInputStream;
 import transactionalfilestream.TransactionalFileOutputStream;
 
-public class FindReplaceProcess implements MigratableProcess {
+public class FindReplaceProcess extends MigratableProcess {
 
 	private static final long serialVersionUID = -9013736246455305267L;
 	private TransactionalFileInputStream  inFile;
 	private TransactionalFileOutputStream outFile;
 	private String query;
-	private String replacement; 
-	private int mPid;
+	private String replacement;
+	private String[] args;
 	
 	private volatile boolean suspending;
 
@@ -27,6 +27,7 @@ public class FindReplaceProcess implements MigratableProcess {
 			throw new Exception("Invalid Arguments");
 		}
 		
+		this.args = args;
 		query = args[0];
 		replacement = args[1];
 		inFile = new TransactionalFileInputStream(args[2]);
@@ -76,13 +77,8 @@ public class FindReplaceProcess implements MigratableProcess {
 	}
 
 	@Override
-	public void setPid(int pid) {
-		mPid = pid;
-	}
-
-	@Override
-	public int getPid() {
-		return mPid;
+	public String toString() {
+		return "FindReplaceProcess " + args;
 	}
 
 }

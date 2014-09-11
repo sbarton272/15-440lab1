@@ -28,12 +28,13 @@ public class ProcessManager {
 
 	// TODO split into chunks to make try/catch easier to see
 	public int launch(String host, int port, MigratableProcess process) {
-		System.out.println("LAUNCH: " + host + ":" + Integer.toString(port));
 
-		// Generate pid
+		// Generate pid if it does not already have one
 		int pid = process.hashCode();
 		process.setPid(pid);
 
+		System.out.println("LAUNCH: " + host + ":" + Integer.toString(port) + " (" + pid + ")");
+		
 		try {
 
 			// Open socket to given worker
@@ -56,7 +57,7 @@ public class ProcessManager {
 				// If success store pid -> worker and set pid
 				if (response.isSuccess()) {
 					System.out.println("LAUNCH SUCCESS: " + host + ":"
-							+ Integer.toString(port));
+							+ Integer.toString(port) + " (" + pid + ")");
 
 					// Store pid -> worker
 					mPidWorkerMap.put(pid, new InetSocketAddress(host, port));
@@ -90,10 +91,12 @@ public class ProcessManager {
 
 	public MigratableProcess remove(int pid) {
 
+		System.out.println("REMOVE: (" + pid + ")");
+		
 		// Lookup worker, print error if not alive
 		InetSocketAddress workerAddr = mPidWorkerMap.get(pid);
 		if (workerAddr == null) {
-			System.out.println("Process is dead: " + pid);
+			System.out.println("Process is dead or non-existant: " + pid);
 			return null;
 		}
 
@@ -120,6 +123,8 @@ public class ProcessManager {
 
 					// Success so extract process
 					process = response.getProcess();
+					
+					System.out.println("REMOVE SUCCESS: (" + pid + ")");
 				} else {
 
 					// If process is dead remove from mPidWorkerMap
@@ -196,5 +201,5 @@ public class ProcessManager {
 		launch(host, port, process);
 
 	}
-
+	
 }

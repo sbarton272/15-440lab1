@@ -20,6 +20,8 @@ import migratableprocess.MigratableProcess;
 /**
  * ProcessManager controls the threads being used to run the various processes
  * 
+ * TODO cleanup print statements
+ *
  * @author Spencer
  * 
  */
@@ -77,7 +79,7 @@ class MessageHandler {
 			ObjectInputStream objInput = new ObjectInputStream(
 					connected.getInputStream());
 			RequestMessage msg = (RequestMessage) objInput.readObject();
-			
+
 			// Parse out correct message and run command
 			if (msg.isLaunch()) {
 
@@ -86,35 +88,42 @@ class MessageHandler {
 
 				// Launch the given process on a new thread
 				int pid = launch(((LaunchRequest) msg).getProcess());
-				
+
 				// Respond with success message
 				sendResponse(connected, new LaunchResponse(true, pid));
 
-			}
-			else if (msg.isRemove()) {
+			} else if (msg.isRemove()) {
 
 				// Catch remove event
 				int pid = ((RemoveRequest) msg).getPid();
 				System.out.println("Recieved Remove Request " + pid);
 
-				// If pid not running on a thread return dead message
 				if (!mThreadsMap.containsKey(pid)) {
+
+					// If pid not running on a thread return dead message
 					sendResponse(connected, new RemoveResponse(true));
 				} else {
-				
-				// Launch the given process on a new thread
-				boolean success = remove(pid);
 
-				// Respond with success message
-				sendResponse(connected, new RemoveResponse(success));
-				
+					// Launch the given process on a new thread and generate response
+					RemoveResponse response = remove(pid);
+
+					// Respond with success message
+					sendResponse(connected, response);
+
+					// Tell user about response
+					if (response.isSuccess()) {
+						System.out.println("REMOVED: " + pid);
+					} else {
+						System.out.println("REMOVED: ERROR " + pid);
+					}
+
 				}
 			}
 
 			// Close connections
 			objInput.close();
 			connected.close();
-			
+
 		} catch (IOException | ClassNotFoundException e) {
 			// TODO not well handled
 			e.printStackTrace();
@@ -143,7 +152,7 @@ class MessageHandler {
 	 *            MigratableProcess
 	 * @return process id int
 	 */
-	public int launch(MigratableProcess process) {
+	private int launch(MigratableProcess process) {
 		Thread thread = new Thread(process);
 		int pid = process.getPid();
 
@@ -163,7 +172,7 @@ class MessageHandler {
 	 * @param pid
 	 * @return
 	 */
-	public boolean remove(int pid) {
+	private RemoveResponse remove(int pid) {
 		ThreadRunnablePair pair = mThreadsMap.get(pid);
 		MigratableProcess process = (MigratableProcess) pair.getRunnable();
 		Thread thread = pair.getThread();
@@ -171,13 +180,18 @@ class MessageHandler {
 		// Suspend which terminates
 		process.suspend();
 
-		// Terminate the thread, join to ensure completed
 		try {
+
+			// Terminate the thread, join to ensure completed
 			thread.join(THREAD_JOIN_TIME);
-			System.out.println("REMOVED: " + pid);
-			return true;
+
+			// Response with the process
+			return new RemoveResponse(true, process);
+
 		} catch (InterruptedException e) {
-			return false;
+
+			// Respond with failure
+			return new RemoveResponse(false);
 		}
 	}
 

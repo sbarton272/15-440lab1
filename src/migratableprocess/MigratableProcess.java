@@ -1,33 +1,42 @@
 package migratableprocess;
 import java.io.Serializable;
 
-public interface MigratableProcess extends Serializable, Runnable {
+public abstract class MigratableProcess implements Serializable, Runnable {
+	
+	private static final long serialVersionUID = -3105461466732257272L;
+	private int mPid = -1;
 	
 	/**
 	 * Required by the Runnable interface. This is run when the thread starts.
 	 */
-	public void run();
+	public abstract void run();
 	
 	/**
 	 * Suspend stops the run loop and prepares the process for migration or termination 
 	 */
-	public void suspend();
+	public abstract void suspend();
 	
 	/**
 	 * Create a string representation of the object including the starting argument values.
 	 * 
 	 * @return representation of object 
 	 */
-	public String toString();
+	public abstract String toString();
 	
 	/**
-	 * Set process id
+	 * Set process id if not already set. Note pid > 0.
 	 */
-	public void setPid(int pid);
+	public void setPid(int pid) {
+		if (mPid == -1) {
+			mPid = pid;
+		}
+	}
 	
 	/**
 	 * Get process id
 	 */
-	public int getPid();
+	public int getPid() {
+		return mPid;
+	}
 	
 }

@@ -29,9 +29,11 @@ public class Lab1 {
 		String[] grepArgs = {"aa", "test/grep.txt", "test/grepOut2.txt"};
 		MigratableProcess grepProcess = new GrepProcess(grepArgs);
 		
+		System.out.println(grepProcess);
+		
 		int grepPid = processManager.launch("localhost", 80, grepProcess);
-//		Thread.sleep(500);
-//		processManager.migrate(grepPid);
+		Thread.sleep(500);
+		processManager.migrate("localhost", 81, grepPid);
 		Thread.sleep(1000);
 		processManager.remove(grepPid);
 //		

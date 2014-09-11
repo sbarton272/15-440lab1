@@ -8,13 +8,12 @@ import java.lang.InterruptedException;
 import transactionalfilestream.TransactionalFileInputStream;
 import transactionalfilestream.TransactionalFileOutputStream;
 
-public class GrepProcess implements MigratableProcess
-{
+public class GrepProcess extends MigratableProcess {
 	private static final long serialVersionUID = -2757242538506557482L;
 	private TransactionalFileInputStream  inFile;
 	private TransactionalFileOutputStream outFile;
 	private String query;
-	private int mPid;
+	private String[] args;
 
 	private volatile boolean suspending;
 
@@ -25,6 +24,7 @@ public class GrepProcess implements MigratableProcess
 			throw new Exception("Invalid Arguments");
 		}
 		
+		this.args = args;
 		query = args[0];
 		inFile = new TransactionalFileInputStream(args[1]);
 		outFile = new TransactionalFileOutputStream(args[2], false);
@@ -74,13 +74,8 @@ public class GrepProcess implements MigratableProcess
 	}
 
 	@Override
-	public void setPid(int pid) {
-		mPid = pid;
-	}
-
-	@Override
-	public int getPid() {
-		return mPid;
+	public String toString() {
+		return "GrepProcess " + args;
 	}
 
 }
