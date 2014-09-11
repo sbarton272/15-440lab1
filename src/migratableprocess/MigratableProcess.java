@@ -25,11 +25,13 @@ public abstract class MigratableProcess implements Serializable, Runnable {
 	
 	/**
 	 * Set process id if not already set. Note pid > 0.
+	 * @return pid
 	 */
-	public void setPid(int pid) {
+	public int setPid(int pid) {
 		if (mPid == -1) {
 			mPid = pid;
 		}
+		return mPid;
 	}
 	
 	/**

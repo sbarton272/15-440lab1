@@ -31,7 +31,7 @@ public class ProcessManager {
 
 		// Generate pid if it does not already have one
 		int pid = process.hashCode();
-		process.setPid(pid);
+		pid = process.setPid(pid);
 
 		System.out.println("LAUNCH: " + host + ":" + Integer.toString(port) + " (" + pid + ")");
 		
@@ -188,17 +188,26 @@ public class ProcessManager {
 	 */
 	public void migrate(String host, int port, int pid) {
 
+		String migrateDetails = host + ":" + port + " (" + pid + ")";
+		System.out.println("MIGRATE: " + migrateDetails);
+		
 		// Remove process from first worker
 		MigratableProcess process = remove(pid);
 
 		if (process == null) {
-			System.out.println("Unable to remove process from original worker "
-					+ pid);
+			System.out.println("MIGRATE FAILURE: Unable to remove process from original worker "
+					+ migrateDetails);
 			return;
 		}
 
 		// Launch process on second worker
-		launch(host, port, process);
+		int resultPid = launch(host, port, process);
+		
+		if (resultPid != -1) {
+			System.out.println("MIGRATE SUCCESS: " + migrateDetails);
+		} else {
+			System.out.println("MIGRATE FAILURE: " + migrateDetails);
+		}
 
 	}
 	
