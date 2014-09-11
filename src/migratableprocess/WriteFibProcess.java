@@ -12,6 +12,7 @@ public class WriteFibProcess implements MigratableProcess {
 	private int maxDepth;
 	private int depth;
 	private int[] priorFib; 
+	private int mPid;
 
 	private volatile boolean suspending;
 
@@ -70,6 +71,16 @@ public class WriteFibProcess implements MigratableProcess {
 		System.out.println("SUSPENDED" + suspending);
 		while (suspending);
 		System.out.println("NOT SUSPENDED");
+	}
+
+	@Override
+	public void setPid(int pid) {
+		mPid = pid;
+	}
+
+	@Override
+	public int getPid() {
+		return mPid;
 	}
 
 }

@@ -1,9 +1,16 @@
 package worker;
 import helper.Serializer;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 
+import message.LaunchMessage;
+import message.Message;
 import migratableprocess.MigratableProcess;
 
 /**
@@ -21,6 +28,51 @@ public class Worker {
 		mThreadsMap = new HashMap<Integer, ThreadRunnablePair>(); 
 	}
 	
+	public static void main(String [ ] args) {
+		
+		if (args.length != 1) {
+			System.out.println("usage: Worker <listeningPort>");
+			throw new Exception("Invalid Arguments");
+		}
+		
+		ServerSocket listeningSoc = new ServerSocket(Integer.parseInt(args[0]));
+		
+		// Sit in main loop waiting to deal with requests
+		while (true) {
+            
+    		// Get something on the socket and push off to thread to deal with it
+            Socket connected = listeningSoc.accept();
+            new commandParser(connected).start();
+		}
+		
+    }
+}
+
+class commandParser extends Thread {
+
+	public commandParser(Socket connected) {
+		System.out.println("Command recieved from " + connected.getInetAddress() + ": " + connected.getPort());
+
+		// Read in object
+		ObjectInputStream objInput = new ObjectInputStream(connected.getInputStream());
+		Message msg = (Message) objInput.readObject();
+		objInput.close();
+		
+		// Parse out correct message and run command
+		
+		// Catch launch event
+		if (msg instanceof LaunchMessage) {
+			
+		}
+		
+		// Contains pid and process
+		
+		// Catch remove event
+		
+		// Catch migrate event
+		
+	}
+
 	/**
 	 * Create a new thread and start its runnable process
 	 * 
@@ -38,7 +90,7 @@ public class Worker {
 		thread.start();
 		return pid;
 	}
-	
+ 	
 	/**
 	 * Stop the given process and remove the thread
 	 * 

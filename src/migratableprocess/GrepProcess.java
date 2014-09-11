@@ -14,6 +14,7 @@ public class GrepProcess implements MigratableProcess
 	private TransactionalFileInputStream  inFile;
 	private TransactionalFileOutputStream outFile;
 	private String query;
+	private int mPid;
 
 	private volatile boolean suspending;
 
@@ -70,6 +71,16 @@ public class GrepProcess implements MigratableProcess
 		System.out.println("SUSPENDED" + suspending);
 		while (suspending);
 		System.out.println("NOT SUSPENDED");
+	}
+
+	@Override
+	public void setPid(int pid) {
+		mPid = pid;
+	}
+
+	@Override
+	public int getPid() {
+		return mPid;
 	}
 
 }

@@ -15,7 +15,8 @@ public class FindReplaceProcess implements MigratableProcess {
 	private TransactionalFileOutputStream outFile;
 	private String query;
 	private String replacement; 
-
+	private int mPid;
+	
 	private volatile boolean suspending;
 
 	public FindReplaceProcess(String args[]) throws Exception
@@ -72,6 +73,16 @@ public class FindReplaceProcess implements MigratableProcess {
 		System.out.println("SUSPENDED" + suspending);
 		while (suspending);
 		System.out.println("NOT SUSPENDED");
+	}
+
+	@Override
+	public void setPid(int pid) {
+		mPid = pid;
+	}
+
+	@Override
+	public int getPid() {
+		return mPid;
 	}
 
 }

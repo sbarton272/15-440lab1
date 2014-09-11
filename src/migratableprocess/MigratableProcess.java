@@ -20,4 +20,14 @@ public interface MigratableProcess extends Serializable, Runnable {
 	 */
 	public String toString();
 	
+	/**
+	 * Set process id
+	 */
+	public void setPid(int pid);
+	
+	/**
+	 * Get process id
+	 */
+	public int getPid();
+	
 }

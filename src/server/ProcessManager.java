@@ -1,18 +1,13 @@
 package server;
-import helper.Serializer;
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
-import worker.Worker.ThreadRunnablePair;
+import message.LaunchMessage;
+import message.ResponseMessage;
 import migratableprocess.MigratableProcess;
 
 /**
@@ -32,31 +27,44 @@ public class ProcessManager {
 		System.out.println("LAUNCH: " + host + ":" + Integer.toString(port));
 		
 		try {
+			
+			// Generate pid
+			int pid = process.hashCode();
+			process.setPid(pid);
+			
 			// Open socket to given worker
 			Socket soc = new Socket(host, port);
-
-			// Generate process id
-			int pid = process.hashCode();
 			
 			// Send process to worker in serialized form
 			ObjectOutputStream  workerOutStream = new ObjectOutputStream(soc.getOutputStream());
-			workerOutStream.writeObject(process);
+			workerOutStream.writeObject(new LaunchMessage(process));
 			workerOutStream.close();
 			
 			// Wait on response from worker
 			ObjectInputStream workerInStream = new ObjectInputStream(soc.getInputStream());
-			ResponseMessage response = (ResponseMessage) workerInStream.readObject(); // blocks here
+			try {
+				
+				// blocks here
+				ResponseMessage response = (ResponseMessage) workerInStream.readObject();
+				
+				// If success store pid -> worker and set pid
+				if (response.isSuccess()) {
+					
+					// Store pid -> worker
+					mPidWorkerMap.put(pid, new InetSocketAddress(host, port));
+				} else {
+					
+					// Error case
+					pid = -1;
+				}
+				
+			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
+			} 
+			
 			workerInStream.close();
-			
-			// If success store pid -> worker and return pid
-			if (response.isSuccess()) {
-				mPidWorkerMap.put(pid, new InetSocketAddress(host, port));
-				return pid;
-			}
-			
-			// If error return -1 to signal error
-			return -1;
-			
+			soc.close();
+		
 		} catch (IOException e) {
 			System.out.println("Cannot connect/send: " + host + ":" + Integer.toString(port));
 		}
