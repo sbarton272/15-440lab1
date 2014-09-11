@@ -8,9 +8,9 @@ import java.net.Socket;
 import java.util.HashMap;
 
 import message.LaunchMessage;
-import message.ProccessDeadMessage;
 import message.RemoveMessage;
 import message.ResponseMessage;
+import message.ResponseProccessDeadMessage;
 import migratableprocess.MigratableProcess;
 
 /**
@@ -108,7 +108,8 @@ public class ProcessManager {
 
 			// If response is null we had an error
 			if (response == null) {
-				System.out.println("Unable to send request or recieve response");
+				System.out
+						.println("Unable to send request or recieve response");
 				return;
 			}
 
@@ -116,8 +117,9 @@ public class ProcessManager {
 			if (response.isFailure()) {
 
 				// If process is dead remove from mPidWorkerMap
-				if (response instanceof ProccessDeadMessage) {
-					int deadPid = ((ProccessDeadMessage) response).getPid();
+				if (response instanceof ResponseProccessDeadMessage) {
+					int deadPid = ((ResponseProccessDeadMessage) response)
+							.getPid();
 					if (deadPid == pid) {
 						mPidWorkerMap.remove(deadPid);
 						System.out.println("Process is dead: " + deadPid);

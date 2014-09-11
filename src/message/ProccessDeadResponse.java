@@ -1,12 +1,12 @@
 package message;
 
 
-public class ProccessDeadMessage extends ResponseMessage {
+public class ProccessDeadResponse extends Response {
 
 	private static final long serialVersionUID = 6344213116880521650L;
 	private int mPid;
 	
-	public ProccessDeadMessage(int pid) {
+	public ProccessDeadResponse(int pid) {
 		super(false);
 		mPid = pid;
 	}

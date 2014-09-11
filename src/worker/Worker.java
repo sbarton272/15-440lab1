@@ -13,7 +13,9 @@ import java.util.Map;
 
 import message.LaunchMessage;
 import message.Message;
-import message.ResponseMessage;
+import message.ProccessDeadResponse;
+import message.RemoveMessage;
+import message.Response;
 import migratableprocess.MigratableProcess;
 
 /**
@@ -35,8 +37,9 @@ public class Worker {
 		int port = Integer.parseInt(args[0]);
 		ServerSocket listeningSoc = new ServerSocket(port);
 
-		System.out.println("Worker listening on " + InetAddress.getLocalHost() + ":" + port);
-		
+		System.out.println("Worker listening on " + InetAddress.getLocalHost()
+				+ ":" + port);
+
 		// Create message handler
 		MessageHandler messageHandler = new MessageHandler();
 
@@ -86,21 +89,37 @@ class MessageHandler {
 				// Launch the given process on a new thread
 				launch(((LaunchMessage) msg).getProcess());
 				
-				System.out.println("CLOSED? " + connected.isClosed());
-
 				// Respond with success message
-				sendResponse(connected, true);
-				
-				// Close connections
-				objInput.close();
-				connected.close();
+				sendResponse(connected, new Response());
 
 			}
 
 			// Catch remove event
+			if (msg instanceof RemoveMessage) {
+				int pid = ((RemoveMessage) msg).getPid();
+				System.out.println("Recieved Remove Message " + pid);
+
+				// If pid not running on a thread return dead message
+				if (!mThreadsMap.containsKey(pid)) {
+					sendResponse(connected, new ProccessDeadResponse(pid));
+				} else {
+				
+				// Launch the given process on a new thread
+				boolean success = remove(pid);
+
+				// Respond with success message
+				sendResponse(connected, new Response(success));
+				
+				}
+			}
 
 			// Catch migrate event
+			// TODO
 
+			// Close connections
+			objInput.close();
+			connected.close();
+			
 		} catch (IOException | ClassNotFoundException e) {
 			// TODO not well handled
 			e.printStackTrace();
@@ -111,14 +130,14 @@ class MessageHandler {
 	 * Write back response message on socket and close the socket
 	 * 
 	 * @param connected
-	 * @param success
+	 * @param proccessDeadResponse
 	 * @throws IOException
 	 */
-	private void sendResponse(Socket connected, boolean success)
+	private void sendResponse(Socket connected, Response response)
 			throws IOException {
 		ObjectOutputStream workerOutStream = new ObjectOutputStream(
 				connected.getOutputStream());
-		workerOutStream.writeObject(new ResponseMessage());
+		workerOutStream.writeObject(response);
 		workerOutStream.close();
 	}
 
@@ -137,7 +156,7 @@ class MessageHandler {
 		mThreadsMap.put(pid, new ThreadRunnablePair(thread, process));
 
 		thread.start();
-		
+
 		System.out.println("LAUNCHED " + pid);
 
 		return pid;
@@ -147,8 +166,9 @@ class MessageHandler {
 	 * Stop the given process and remove the thread
 	 * 
 	 * @param pid
+	 * @return
 	 */
-	public void remove(int pid) {
+	public boolean remove(int pid) {
 		ThreadRunnablePair pair = mThreadsMap.get(pid);
 		MigratableProcess process = (MigratableProcess) pair.getRunnable();
 		Thread thread = pair.getThread();
@@ -162,8 +182,9 @@ class MessageHandler {
 		try {
 			thread.join(THREAD_JOIN_TIME);
 			System.out.println("REMOVED: " + pid);
+			return true;
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			return false;
 		}
 	}
 

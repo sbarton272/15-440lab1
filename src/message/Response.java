@@ -1,21 +1,21 @@
 package message;
 
-public class ResponseMessage implements Message {
+public class Response implements Message {
 
 	private static final long serialVersionUID = 4038380303841252253L;
 	private boolean mSuccess;
 	private String mMessage;
 
-	public ResponseMessage(boolean success, String message) {
+	public Response(boolean success, String message) {
 		mSuccess = success;
 		mMessage = message;
 	}
 
-	public ResponseMessage(boolean success) {
+	public Response(boolean success) {
 		this(success, "");
 	}
 
-	public ResponseMessage() {
+	public Response() {
 		this(true, "");
 	}
 
