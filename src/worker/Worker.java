@@ -38,8 +38,10 @@ public class Worker {
 		int port = Integer.parseInt(args[0]);
 		ServerSocket listeningSoc = new ServerSocket(port);
 
+		// Startup message
 		System.out.println("Worker listening on " + InetAddress.getLocalHost()
 				+ ":" + port);
+		System.out.println("================================================");
 
 		// Create message handler
 		MessageHandler messageHandler = new MessageHandler();
@@ -50,7 +52,7 @@ public class Worker {
 			// Get something on the socket and push off to thread to deal with
 			// it
 			Socket connected = listeningSoc.accept();
-			messageHandler.handleMessage(connected);
+			messageHandler.handleRequest(connected);
 
 		}
 
@@ -68,11 +70,10 @@ class MessageHandler {
 		mThreadsMap = new HashMap<Integer, ThreadRunnablePair>();
 	}
 
-	public void handleMessage(Socket connected) {
+	public void handleRequest(Socket connected) {
 		System.out.println("Command recieved from "
 				+ connected.getInetAddress() + ": " + connected.getPort());
 
-		// Read in object
 		try {
 
 			// Open stream and read request
@@ -82,42 +83,9 @@ class MessageHandler {
 
 			// Parse out correct message and run command
 			if (msg.isLaunch()) {
-
-				// Catch launch event
-				System.out.println("Recieved Launch Request");
-
-				// Launch the given process on a new thread
-				int pid = launch(((LaunchRequest) msg).getProcess());
-
-				// Respond with success message
-				sendResponse(connected, new LaunchResponse(true, pid));
-
+				handleLaunchRequest(connected, (LaunchRequest)msg);
 			} else if (msg.isRemove()) {
-
-				// Catch remove event
-				int pid = ((RemoveRequest) msg).getPid();
-				System.out.println("Recieved Remove Request " + pid);
-
-				if (!mThreadsMap.containsKey(pid)) {
-
-					// If pid not running on a thread return dead message
-					sendResponse(connected, new RemoveResponse(true));
-				} else {
-
-					// Launch the given process on a new thread and generate response
-					RemoveResponse response = remove(pid);
-
-					// Respond with success message
-					sendResponse(connected, response);
-
-					// Tell user about response
-					if (response.isSuccess()) {
-						System.out.println("REMOVED: " + pid);
-					} else {
-						System.out.println("REMOVED: ERROR " + pid);
-					}
-
-				}
+				handleRemoveRequest(connected, (RemoveRequest)msg);
 			}
 
 			// Close connections
@@ -126,25 +94,33 @@ class MessageHandler {
 
 		} catch (IOException | ClassNotFoundException e) {
 			// TODO not well handled
+			System.out.println("REQUEST ERROR");
 			e.printStackTrace();
 		}
 	}
 
-	/**
-	 * Write back response message on socket and close the socket
-	 * 
-	 * @param connected
-	 * @param proccessDeadResponse
-	 * @throws IOException
-	 */
-	private void sendResponse(Socket connected, ResponseMessage response)
-			throws IOException {
-		ObjectOutputStream workerOutStream = new ObjectOutputStream(
-				connected.getOutputStream());
-		workerOutStream.writeObject(response);
-		workerOutStream.close();
-	}
+	//------------------------------------------------------------------
+	
+	private void handleLaunchRequest(Socket connected, LaunchRequest msg) throws IOException {
+	
+		// Catch launch event
+		System.out.println("LAUNCH REQUEST");
 
+		// Launch the given process on a new thread
+		int pid = launch(msg.getProcess());
+
+		// Respond with success message
+		sendResponse(connected, new LaunchResponse(true, pid));
+		
+		// Tell user about response
+		if (pid > 0) {
+			System.out.println("LAUNCHED: " + pid);
+		} else {
+			System.out.println("LAUNCHED: ERROR " + pid);
+		}
+		
+	}
+	
 	/**
 	 * Create a new thread and start its runnable process
 	 * 
@@ -161,11 +137,39 @@ class MessageHandler {
 
 		thread.start();
 
-		System.out.println("LAUNCHED " + pid);
-
 		return pid;
 	}
 
+	//------------------------------------------------------------------
+	
+	private void handleRemoveRequest(Socket connected, RemoveRequest msg) throws IOException {
+		
+		// Catch remove event
+		int pid = ((RemoveRequest) msg).getPid();
+		System.out.println("REMOVE REQUEST (" + pid + ")");
+
+		if (!mThreadsMap.containsKey(pid)) {
+
+			// If pid not running on a thread return dead message
+			sendResponse(connected, new RemoveResponse(true));
+		} else {
+
+			// Launch the given process on a new thread and generate response
+			RemoveResponse response = remove(pid);
+
+			// Respond with success message
+			sendResponse(connected, response);
+
+			// Tell user about response
+			if (response.isSuccess()) {
+				System.out.println("REMOVED: " + pid);
+			} else {
+				System.out.println("REMOVED: ERROR " + pid);
+			}
+
+		}
+	}
+	
 	/**
 	 * Stop the given process and remove the thread
 	 * 
@@ -193,6 +197,23 @@ class MessageHandler {
 			// Respond with failure
 			return new RemoveResponse(false);
 		}
+	}
+	
+	//------------------------------------------------------------------
+	
+	/**
+	 * Write back response message on socket and close the socket
+	 * 
+	 * @param connected
+	 * @param proccessDeadResponse
+	 * @throws IOException
+	 */
+	private void sendResponse(Socket connected, ResponseMessage response)
+			throws IOException {
+		ObjectOutputStream workerOutStream = new ObjectOutputStream(
+				connected.getOutputStream());
+		workerOutStream.writeObject(response);
+		workerOutStream.close();
 	}
 
 	/**
