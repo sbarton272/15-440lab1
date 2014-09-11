@@ -13,8 +13,9 @@ import java.util.Map;
 
 import message.LaunchMessage;
 import message.Message;
-import message.ProccessDeadResponse;
+import message.ProcessDeadResponse;
 import message.RemoveMessage;
+import message.RequestMessage;
 import message.Response;
 import migratableprocess.MigratableProcess;
 
@@ -77,13 +78,14 @@ class MessageHandler {
 			
 			ObjectInputStream objInput = new ObjectInputStream(
 					connected.getInputStream());
-			Message msg = (Message) objInput.readObject();
+			RequestMessage msg = (RequestMessage) objInput.readObject();
 			
 			System.out.println("CLOSED? " + connected.isClosed());
 
 			// Parse out correct message and run command
-			// Catch launch event
-			if (msg instanceof LaunchMessage) {
+			if (msg.isLaunch()) {
+
+				// Catch launch event
 				System.out.println("Recieved Launch Message");
 
 				// Launch the given process on a new thread
@@ -93,15 +95,15 @@ class MessageHandler {
 				sendResponse(connected, new Response());
 
 			}
+			else if (msg.isRemove()) {
 
-			// Catch remove event
-			if (msg instanceof RemoveMessage) {
+				// Catch remove event
 				int pid = ((RemoveMessage) msg).getPid();
 				System.out.println("Recieved Remove Message " + pid);
 
 				// If pid not running on a thread return dead message
 				if (!mThreadsMap.containsKey(pid)) {
-					sendResponse(connected, new ProccessDeadResponse(pid));
+					sendResponse(connected, new ProcessDeadResponse(pid));
 				} else {
 				
 				// Launch the given process on a new thread
@@ -112,9 +114,6 @@ class MessageHandler {
 				
 				}
 			}
-
-			// Catch migrate event
-			// TODO
 
 			// Close connections
 			objInput.close();

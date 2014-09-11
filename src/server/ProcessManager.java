@@ -8,7 +8,7 @@ import java.net.Socket;
 import java.util.HashMap;
 
 import message.LaunchMessage;
-import message.ProccessDeadResponse;
+import message.ProcessDeadResponse;
 import message.RemoveMessage;
 import message.Response;
 import migratableprocess.MigratableProcess;
@@ -88,13 +88,13 @@ public class ProcessManager {
 		return pid;
 	}
 
-	public void remove(int pid) {
+	public MigratableProcess remove(int pid) {
 
 		// Lookup worker, print error if not alive
 		InetSocketAddress workerAddr = mPidWorkerMap.get(pid);
 		if (workerAddr == null) {
 			System.out.println("Process is dead: " + pid);
-			return;
+			return null;
 		}
 
 		// Open socket to worker, error if no socket available
@@ -110,19 +110,26 @@ public class ProcessManager {
 			if (response == null) {
 				System.out
 						.println("Unable to send request or recieve response");
-				return;
+				return null;
 			}
-
-			// Success response do nothing but error print that error occurred
-			if (response.isFailure()) {
-
+			
+			MigratableProcess process = null;
+			if (response.isSuccess()) {
+				
+				// Success so extract process
+				process = response.getProcess();
+			}
+			else if (response.isFailure()) {
+				// Error print that error occurred
+				
 				// If process is dead remove from mPidWorkerMap
-				if (response instanceof ProccessDeadResponse) {
-					int deadPid = ((ProccessDeadResponse) response)
+				if (response instanceof ProcessDeadResponse) {
+					int deadPid = ((ProcessDeadResponse) response)
 							.getPid();
 					if (deadPid == pid) {
 						mPidWorkerMap.remove(deadPid);
 						System.out.println("Process is dead: " + deadPid);
+						
 					} else {
 
 						// Error case
@@ -138,6 +145,7 @@ public class ProcessManager {
 					+ workerAddr.getHostString() + ":" + workerAddr.getPort());
 		}
 
+		return null;
 	}
 
 	private Response sendRemove(Socket workerSoc, int pid) {
@@ -165,8 +173,25 @@ public class ProcessManager {
 		}
 	}
 
-	public void migrate(int pid) {
-		// TODO
+	/**
+	 * 
+	 * @param host host of new worker
+	 * @param port port of new worker
+	 * @param pid process id
+	 */
+	public void migrate(String host, int port, int pid) {
+
+		// Remove process from first worker
+		MigratableProcess process = remove(pid);
+		
+		if (process == null) {
+			System.out.println("Unable to remove process from original worker " + pid);
+			return;
+		}
+
+		// Launch process on second worker
+		launch(host, port, process);
+		
 	}
 
 }
