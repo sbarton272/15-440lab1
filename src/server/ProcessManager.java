@@ -8,9 +8,9 @@ import java.net.Socket;
 import java.util.HashMap;
 
 import message.LaunchMessage;
+import message.ProccessDeadResponse;
 import message.RemoveMessage;
-import message.ResponseMessage;
-import message.ResponseProccessDeadMessage;
+import message.Response;
 import migratableprocess.MigratableProcess;
 
 /**
@@ -50,7 +50,7 @@ public class ProcessManager {
 			try {
 
 				// blocks here
-				ResponseMessage response = (ResponseMessage) workerInStream
+				Response response = (Response) workerInStream
 						.readObject();
 
 				// If success store pid -> worker and set pid
@@ -104,7 +104,7 @@ public class ProcessManager {
 					workerAddr.getPort());
 
 			// Attempt communication over socket. Send request, receive response
-			ResponseMessage response = sendRemove(workerSoc, pid);
+			Response response = sendRemove(workerSoc, pid);
 
 			// If response is null we had an error
 			if (response == null) {
@@ -117,8 +117,8 @@ public class ProcessManager {
 			if (response.isFailure()) {
 
 				// If process is dead remove from mPidWorkerMap
-				if (response instanceof ResponseProccessDeadMessage) {
-					int deadPid = ((ResponseProccessDeadMessage) response)
+				if (response instanceof ProccessDeadResponse) {
+					int deadPid = ((ProccessDeadResponse) response)
 							.getPid();
 					if (deadPid == pid) {
 						mPidWorkerMap.remove(deadPid);
@@ -140,7 +140,7 @@ public class ProcessManager {
 
 	}
 
-	private ResponseMessage sendRemove(Socket workerSoc, int pid) {
+	private Response sendRemove(Socket workerSoc, int pid) {
 		// Attempt communication over socket. Send request, receive response
 		try {
 
@@ -152,7 +152,7 @@ public class ProcessManager {
 			// Block on response
 			ObjectInputStream workerInStream = new ObjectInputStream(
 					workerSoc.getInputStream());
-			ResponseMessage response = (ResponseMessage) workerInStream
+			Response response = (Response) workerInStream
 					.readObject();
 
 			// Close streams

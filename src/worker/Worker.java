@@ -174,9 +174,7 @@ class MessageHandler {
 		Thread thread = pair.getThread();
 
 		// Suspend which terminates
-		System.out.println("SUSPENDING");
 		process.suspend();
-		System.out.println("SUSPENDING DONE");
 
 		// Terminate the thread, join to ensure completed
 		try {
