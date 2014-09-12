@@ -27,5 +27,3 @@ proguard/
 *.log
 *.synctex.gz
 
-# Tmp folder for output
-tmp/
