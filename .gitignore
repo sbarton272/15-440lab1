@@ -26,3 +26,6 @@ proguard/
 *.aux
 *.log
 *.synctex.gz
+
+# Tmp folder for output
+tmp/

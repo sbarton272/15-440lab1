@@ -191,7 +191,7 @@ public class Lab1 {
 
 	private static void runTest1() throws Exception {
 		// Grep process
-		String[] grepArgs = { "aa", "test/grep.txt", "test/grepOut2.txt" };
+		String[] grepArgs = { "aa", "test/grep.txt", "tmp/grepOut2.txt" };
 		MigratableProcess grepProcess = new GrepProcess(grepArgs);
 
 		System.out.println("Starting with " + grepProcess);
@@ -210,7 +210,7 @@ public class Lab1 {
 		mProcessManager.launch("localhost", 80, grepProcess);
 
 		// Try fib process
-		String[] fibArgs = { "15", "test/fib1.txt" };
+		String[] fibArgs = { "15", "tmp/fib1.txt" };
 		MigratableProcess fibProcess = new WriteFibProcess(fibArgs);
 
 		mProcessManager.launch("localhost", 80, fibProcess);
@@ -222,7 +222,7 @@ public class Lab1 {
 
 		// Try FindReplace
 		String[] replaceArgs = { "aa", "AA", "test/grep.txt",
-				"test/findReplaceOut1.txt" };
+				"tmp/findReplaceOut1.txt" };
 		MigratableProcess findReplaceProcess = new FindReplaceProcess(
 				replaceArgs);
 		mProcessManager.launch("localhost", 80, findReplaceProcess);
