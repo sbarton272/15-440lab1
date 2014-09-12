@@ -161,8 +161,14 @@ class MessageHandler {
 		} else {
 
 			// Launch the given process on a new thread and generate response
-			RemoveResponse response = remove(pid);
-
+			MigratableProcess process = remove(pid);
+			RemoveResponse response;
+			if (process != null) {
+				response = new RemoveResponse(true, process);
+			} else {
+				response = new RemoveResponse(false);
+			}
+				
 			// Respond with success message
 			sendResponse(connected, response);
 
@@ -182,7 +188,7 @@ class MessageHandler {
 	 * @param pid
 	 * @return
 	 */
-	private RemoveResponse remove(int pid) {
+	private MigratableProcess remove(int pid) {
 		ThreadRunnablePair pair = mThreadsMap.get(pid);
 		MigratableProcess process = (MigratableProcess) pair.getRunnable();
 		Thread thread = pair.getThread();
@@ -196,12 +202,12 @@ class MessageHandler {
 			thread.join(THREAD_JOIN_TIME);
 
 			// Response with the process
-			return new RemoveResponse(true, process);
+			return process;
 
 		} catch (InterruptedException e) {
 
 			// Respond with failure
-			return new RemoveResponse(false);
+			return null;
 		}
 	}
 
@@ -211,7 +217,7 @@ class MessageHandler {
 		
 		// Catch remove event
 		int pid = msg.getPid();
-		System.out.println("REMOVE REQUEST: " + pid + "");
+		System.out.println("IS ALIVE REQUEST: " + pid + "");
 
 		// Get process and thread
 		ThreadRunnablePair pair = mThreadsMap.get(pid);
@@ -245,7 +251,7 @@ class MessageHandler {
 		
 		// Tell user about response
 		if (response.isSuccess()) {
-			System.out.println("IS ALIVE: " + pid);
+			System.out.println("IS ALIVE: SUCCESS " + pid);
 		} else {
 			System.out.println("IS ALIVE: ERROR " + pid);
 		}

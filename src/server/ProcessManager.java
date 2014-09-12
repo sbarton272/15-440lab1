@@ -124,7 +124,7 @@ public class ProcessManager {
 
 			// If response is null we had an error
 			if (response == null) {
-				print("Unable to send request or recieve response");
+				print("REMOVE FAILURE: Unable to send request or recieve response");
 				return null;
 			}
 
@@ -182,6 +182,14 @@ public class ProcessManager {
 		String migrateDetails = host + ":" + port + " (" + pid + ")";
 		print("MIGRATE: " + migrateDetails);
 
+		// Lookup original worker for error case later if necessary, print error if not alive
+		InetSocketAddress originalWorkerAddr = mPidWorkerMap.get(pid);
+		if (originalWorkerAddr == null) {
+			print("Migrate FAILURE: Process is dead or non-existant ("
+							+ pid + ")");
+			return false;
+		}
+		
 		// Remove process from first worker
 		MigratableProcess process = remove(pid);
 
@@ -198,7 +206,17 @@ public class ProcessManager {
 			print("MIGRATE SUCCESS: " + migrateDetails);
 			return true;
 		} else {
-			print("MIGRATE FAILURE: " + migrateDetails);
+			// If unable to launch on the new machine but the process was recovered from the
+			// original worker, send the process back to the original worker 
+			int retryPid = launch(originalWorkerAddr.getHostString(), originalWorkerAddr.getPort(), process);
+			
+			// Deal with relaunch errors
+			if (retryPid == -1) {
+				print("MIGRATE FAILURE: " + migrateDetails);
+			} else {
+				print("MIGRATE FAILURE: Returned process to original worker (" + pid + ")");
+			}
+			
 		}
 		
 		return false;
