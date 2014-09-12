@@ -14,5 +14,9 @@ public abstract class RequestMessage implements Message {
 	public boolean isRemove() {
 		return false;
 	}
+	
+	public boolean isAlive() {
+		return false;
+	}
 		
 }

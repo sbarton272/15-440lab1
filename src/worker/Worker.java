@@ -9,6 +9,8 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 
+import message.AliveRequest;
+import message.AliveResponse;
 import message.LaunchResponse;
 import message.LaunchRequest;
 import message.RemoveRequest;
@@ -21,7 +23,7 @@ import migratableprocess.MigratableProcess;
  * ProcessManager controls the threads being used to run the various processes
  * 
  * TODO cleanup print statements
- *
+ * 
  * @author Spencer
  * 
  */
@@ -71,8 +73,8 @@ class MessageHandler {
 	}
 
 	public void handleRequest(Socket connected) {
-		System.out.println("REQUEST RECIEVED: "
-				+ connected.getInetAddress() + ":" + connected.getPort());
+		System.out.println("REQUEST RECIEVED: " + connected.getInetAddress()
+				+ ":" + connected.getPort());
 
 		try {
 
@@ -83,9 +85,11 @@ class MessageHandler {
 
 			// Parse out correct message and run command
 			if (msg.isLaunch()) {
-				handleLaunchRequest(connected, (LaunchRequest)msg);
+				handleLaunchRequest(connected, (LaunchRequest) msg);
 			} else if (msg.isRemove()) {
-				handleRemoveRequest(connected, (RemoveRequest)msg);
+				handleRemoveRequest(connected, (RemoveRequest) msg);
+			} else if (msg.isAlive()) {
+				handleIsAliveRequest(connected, (AliveRequest) msg);
 			}
 
 			// Close connections
@@ -99,10 +103,11 @@ class MessageHandler {
 		}
 	}
 
-	//------------------------------------------------------------------
-	
-	private void handleLaunchRequest(Socket connected, LaunchRequest msg) throws IOException {
-	
+	// ------------------------------------------------------------------
+
+	private void handleLaunchRequest(Socket connected, LaunchRequest msg)
+			throws IOException {
+
 		// Catch launch event
 		System.out.println("LAUNCH REQUEST");
 
@@ -111,16 +116,16 @@ class MessageHandler {
 
 		// Respond with success message
 		sendResponse(connected, new LaunchResponse(true, pid));
-		
+
 		// Tell user about response
 		if (pid > 0) {
 			System.out.println("LAUNCHED: " + pid);
 		} else {
 			System.out.println("LAUNCHED: ERROR " + pid);
 		}
-		
+
 	}
-	
+
 	/**
 	 * Create a new thread and start its runnable process
 	 * 
@@ -140,12 +145,13 @@ class MessageHandler {
 		return pid;
 	}
 
-	//------------------------------------------------------------------
-	
-	private void handleRemoveRequest(Socket connected, RemoveRequest msg) throws IOException {
-		
+	// ------------------------------------------------------------------
+
+	private void handleRemoveRequest(Socket connected, RemoveRequest msg)
+			throws IOException {
+
 		// Catch remove event
-		int pid = ((RemoveRequest) msg).getPid();
+		int pid = msg.getPid();
 		System.out.println("REMOVE REQUEST: " + pid + "");
 
 		if (!mThreadsMap.containsKey(pid)) {
@@ -169,7 +175,7 @@ class MessageHandler {
 
 		}
 	}
-	
+
 	/**
 	 * Stop the given process and remove the thread
 	 * 
@@ -198,9 +204,56 @@ class MessageHandler {
 			return new RemoveResponse(false);
 		}
 	}
-	
-	//------------------------------------------------------------------
-	
+
+	// ------------------------------------------------------------------
+
+	private void handleIsAliveRequest(Socket connected, AliveRequest msg) throws IOException {
+		
+		// Catch remove event
+		int pid = msg.getPid();
+		System.out.println("REMOVE REQUEST: " + pid + "");
+
+		// Get process and thread
+		ThreadRunnablePair pair = mThreadsMap.get(pid);
+		
+		AliveResponse response;
+		if (pair == null) {
+
+			// If process not running on a thread return dead message
+			response = new AliveResponse(true, false);
+		} else {
+			
+			// Extract thread
+			Thread thread = pair.getThread();
+
+			// Check if thread is alive
+			if (thread.isAlive()) {
+				
+				// Send that it is alive
+				// TODO better notation for success response
+				response = new AliveResponse(true, true);
+			} else {
+				
+				// Send that it is dead
+				response = new AliveResponse(true, false);
+
+			}
+		}
+
+		// Send decided upon response
+		sendResponse(connected, response);
+		
+		// Tell user about response
+		if (response.isSuccess()) {
+			System.out.println("IS ALIVE: " + pid);
+		} else {
+			System.out.println("IS ALIVE: ERROR " + pid);
+		}
+
+	}
+
+	// ------------------------------------------------------------------
+
 	/**
 	 * Write back response message on socket and close the socket
 	 * 
