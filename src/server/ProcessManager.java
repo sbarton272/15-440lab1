@@ -25,9 +25,11 @@ import migratableprocess.MigratableProcess;
 public class ProcessManager {
 
 	private HashMap<Integer, InetSocketAddress> mPidWorkerMap;
+	private boolean mVerbose;
 
 	public ProcessManager() {
 		mPidWorkerMap = new HashMap<Integer, InetSocketAddress>();
+		mVerbose = false;
 	}
 
 	// ------------------------------------------------------------
@@ -39,7 +41,7 @@ public class ProcessManager {
 		int pid = process.hashCode();
 		pid = process.setPid(pid);
 
-		System.out.println("LAUNCH: " + host + ":" + Integer.toString(port)
+		print("LAUNCH: " + host + ":" + Integer.toString(port)
 				+ " (" + pid + ")");
 
 		try {
@@ -63,7 +65,7 @@ public class ProcessManager {
 
 				// If success store pid -> worker and set pid
 				if (response.isSuccess()) {
-					System.out.println("LAUNCH SUCCESS: " + host + ":"
+					print("LAUNCH SUCCESS: " + host + ":"
 							+ Integer.toString(port) + " (" + pid + ")");
 
 					// Store pid -> worker
@@ -86,7 +88,7 @@ public class ProcessManager {
 			soc.close();
 
 		} catch (IOException e) {
-			System.out.println("Cannot connect/send: " + host + ":"
+			print("Cannot connect/send: " + host + ":"
 					+ Integer.toString(port));
 
 			// Error case
@@ -100,13 +102,12 @@ public class ProcessManager {
 
 	public MigratableProcess remove(int pid) {
 
-		System.out.println("REMOVE: (" + pid + ")");
+		print("REMOVE: (" + pid + ")");
 
 		// Lookup worker, print error if not alive
 		InetSocketAddress workerAddr = mPidWorkerMap.get(pid);
 		if (workerAddr == null) {
-			System.out
-					.println("REMOVE FAILURE: Process is dead or non-existant ("
+			print("REMOVE FAILURE: Process is dead or non-existant ("
 							+ pid + ")");
 			return null;
 		}
@@ -123,8 +124,7 @@ public class ProcessManager {
 
 			// If response is null we had an error
 			if (response == null) {
-				System.out
-						.println("Unable to send request or recieve response");
+				print("Unable to send request or recieve response");
 				return null;
 			}
 
@@ -139,16 +139,16 @@ public class ProcessManager {
 					// Success so extract process
 					process = response.getProcess();
 
-					System.out.println("REMOVE SUCCESS: (" + pid + ")");
+					print("REMOVE SUCCESS: (" + pid + ")");
 				} else {
 
 					// If was dead then note this and do not return process
-					System.out.println("Process was already dead: " + pid);
+					print("Process was already dead: " + pid);
 				}
 
 			} else {
 				// Print that error occurred
-				System.out.println("Invalid response from worker");
+				print("Invalid response from worker");
 			}
 
 			workerSoc.close();
@@ -157,7 +157,7 @@ public class ProcessManager {
 			return process;
 
 		} catch (IOException e) {
-			System.out.println("Unable to connect to worker: "
+			print("Unable to connect to worker: "
 					+ workerAddr.getHostString() + ":" + workerAddr.getPort());
 		}
 
@@ -177,30 +177,31 @@ public class ProcessManager {
 	 * @param pid
 	 *            process id
 	 */
-	public void migrate(String host, int port, int pid) {
+	public boolean migrate(String host, int port, int pid) {
 
 		String migrateDetails = host + ":" + port + " (" + pid + ")";
-		System.out.println("MIGRATE: " + migrateDetails);
+		print("MIGRATE: " + migrateDetails);
 
 		// Remove process from first worker
 		MigratableProcess process = remove(pid);
 
 		if (process == null) {
-			System.out
-					.println("MIGRATE FAILURE: Unable to remove process from original worker "
+			print("MIGRATE FAILURE: Unable to remove process from original worker "
 							+ migrateDetails);
-			return;
+			return false;
 		}
 
 		// Launch process on second worker
 		int resultPid = launch(host, port, process);
 
 		if (resultPid != -1) {
-			System.out.println("MIGRATE SUCCESS: " + migrateDetails);
+			print("MIGRATE SUCCESS: " + migrateDetails);
+			return true;
 		} else {
-			System.out.println("MIGRATE FAILURE: " + migrateDetails);
+			print("MIGRATE FAILURE: " + migrateDetails);
 		}
-
+		
+		return false;
 	}
 
 	// ------------------------------------------------------------
@@ -213,12 +214,12 @@ public class ProcessManager {
 	 * @return
 	 */
 	public boolean isAlive(int pid) {
-		System.out.println("IS ALIVE: (" + pid + ")");
+		print("IS ALIVE: (" + pid + ")");
 
 		// Lookup worker, return if know not alive
 		InetSocketAddress workerAddr = mPidWorkerMap.get(pid);
 		if (workerAddr == null) {
-			System.out.println("IS ALIVE SUCCESS: (" + pid + ")");
+			print("IS ALIVE SUCCESS: (" + pid + ")");
 			return false;
 		}
 
@@ -235,8 +236,7 @@ public class ProcessManager {
 
 			// If response is null we had an error
 			if (response == null) {
-				System.out
-						.println("IS ALIVE: Unable to send request or recieve response");
+				print("IS ALIVE: Unable to send request or recieve response");
 				return false;
 			}
 
@@ -250,17 +250,17 @@ public class ProcessManager {
 					mPidWorkerMap.remove(pid);
 				}
 				
-				System.out.println("IS ALIVE SUCCESS: (" + pid + ")");
+				print("IS ALIVE SUCCESS: (" + pid + ")");
 				return isAlive;
 			} else {
 				// Print that error occurred
-				System.out.println("IS ALIVE: Invalid response from worker");
+				print("IS ALIVE: Invalid response from worker");
 			}
 
 			workerSoc.close();
 
 		} catch (IOException e) {
-			System.out.println("IS ALIVE: Unable to connect to worker: "
+			print("IS ALIVE: Unable to connect to worker: "
 					+ workerAddr.getHostString() + ":" + workerAddr.getPort());
 		}
 
@@ -296,4 +296,13 @@ public class ProcessManager {
 		}
 	}
 
+	public void setVerbose(boolean verbose) {
+		mVerbose = verbose;
+	}
+
+	private void print(String msg) {
+		if (mVerbose) {
+			System.out.println(msg);
+		}
+	}
 }
