@@ -143,7 +143,7 @@ Note that the migration can be achieved simply with a remove and a launch. This 
 %------------------------------------------
 
 \section{Implementation State}
-The main bug that I have not determined is with the find replace process. It writes back lines with an extra newline. I believe this was an issue with the \\r character in windows but am not certain.
+The main bug that I have not determined is with the find replace process. It writes back lines with an extra newline on my computer. I believe this was an issue with the \\r character in windows but am not certain.
 
 Other issues may arise with a very large volume of processes being run as I did not optimize for performance.
 
@@ -187,7 +187,7 @@ Is process alive? false
 
 \section{Dependencies}
 
-No dependencies beyond basic java libraries. The test cases do require that the test file be present which is how I submitted it.
+No dependencies beyond basic java libraries. The test cases do require that the test file be present which is how I submitted it. My tests read from \textit{test/grep.txt} for the grep process so they expect this folder and time in the path.
 
 %------------------------------------------
 

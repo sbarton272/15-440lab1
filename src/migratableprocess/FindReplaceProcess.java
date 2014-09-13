@@ -50,7 +50,7 @@ public class FindReplaceProcess extends MigratableProcess {
 
 				// Find and replace
 				String replaced = line.replace(query, replacement).trim();
-				out.print(replaced);
+				out.print(replaced + "\n");
 				
 				// Make take longer so that we don't require extremely large files for interesting results
 				try {
