@@ -20,7 +20,7 @@ public class Lab1 {
 			+ "remove <pid>\n"
 			+ "migrate <hostname> <port> <pid>\n"
 			+ "isalive <pid>\n"
-			+ "test\n"
+			+ "test <hostname1> <port1> <hostname2> <port2>\n"
 			+ "v - toggles verbose mode\n"
 			+ "exit";
 	private static final String LAUNCH = "launch";
