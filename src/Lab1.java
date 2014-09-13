@@ -3,6 +3,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
+import java.util.HashSet;
 
 import server.ProcessManager;
 import migratableprocess.FindReplaceProcess;
@@ -10,13 +11,6 @@ import migratableprocess.GrepProcess;
 import migratableprocess.MigratableProcess;
 import migratableprocess.WriteFibProcess;
 
-/**
- * TODO cleanup try/catch TODO debug remove TODO debug migrate TODO test with
- * remaining TODO build command line interface TODO get working on GHC machines
- * 
- * @author Spencer
- * 
- */
 public class Lab1 {
 
 	private static ProcessManager mProcessManager = new ProcessManager();
@@ -86,7 +80,7 @@ public class Lab1 {
 				} else if (command.equals(IS_ALIVE)) {
 					handleIsAlive(inputArgs);
 				} else if (command.equals(RUN_TEST)) {
-					runTest1();
+					runTest(inputArgs);
 				} else if (command.equals(VERBOSE)) {
 
 					// Toggle verbose
@@ -104,16 +98,16 @@ public class Lab1 {
 
 			} catch (IOException e) {
 				System.out.println("System exiting on error");
+				e.printStackTrace();
 				System.exit(1);
 			}
 
 		}
 
-		// runTest1();
 	}
 
-	//----------------------------------------------------------------
-	
+	// ----------------------------------------------------------------
+
 	private static void handleIsAlive(String[] inputArgs) {
 
 		// Extract arguments
@@ -126,7 +120,7 @@ public class Lab1 {
 
 		// Launch process
 		boolean alive = mProcessManager.isAlive(pid);
-		System.out.println("Is process alive? " + alive);		
+		System.out.println("Is process alive? " + alive);
 	}
 
 	private static void handleMigrate(String[] inputArgs) {
@@ -157,8 +151,7 @@ public class Lab1 {
 
 		// Construct class given name of class in string
 		Class<?> c = Class.forName(inputArgs[3]);
-		Constructor<?> constructor = c
-				.getConstructor(String[].class);
+		Constructor<?> constructor = c.getConstructor(String[].class);
 		String[] processArgs = Arrays.copyOfRange(inputArgs, 4,
 				inputArgs.length);
 		MigratableProcess process = (MigratableProcess) constructor
@@ -172,9 +165,9 @@ public class Lab1 {
 			System.out.println("Started process with id (" + pid + ")");
 		}
 	}
-	
-	//----------------------------------------------------------------
-	
+
+	// ----------------------------------------------------------------
+
 	private static void handleRemove(String[] inputArgs) {
 		// Extract arguments
 		if (inputArgs.length != 2) {
@@ -193,42 +186,85 @@ public class Lab1 {
 		}
 	}
 
-	private static void runTest1() throws Exception {
+	private static void runTest(String[] args) throws Exception {
+
+		// Extract arguments
+		if (args.length != 5) {
+			System.out.println(HELP_MSG);
+			return;
+		}
+
+		// Extract worker locations
+		String hostname1 = args[1];
+		int port1 = Integer.parseInt(args[2]);
+		String hostname2 = args[3];
+		int port2 = Integer.parseInt(args[4]);
+
 		// Grep process
-		String[] grepArgs = { "aa", "test/grep.txt", "tmp/grepOut2.txt" };
+		String[] grepArgs = { "aa", "test/grep.txt", "test/grepOut2.txt" };
 		MigratableProcess grepProcess = new GrepProcess(grepArgs);
+
+		// Fib process
+		String[] fibArgs = { "15", "test/fib1.txt" };
+		MigratableProcess fibProcess = new WriteFibProcess(fibArgs);
+
+		// FindReplace process
+		String[] replaceArgs = { "aa", "AA", "test/grep.txt",
+				"test/findReplaceOut1.txt" };
+		MigratableProcess findReplaceProcess = new FindReplaceProcess(
+				replaceArgs);
+
+		// Try all commands without a process started
+		System.out.println("Starting with error cases");
+		myAssert(null == mProcessManager.remove(0));
+		myAssert(false == mProcessManager.migrate("localhost", 80, 0));
+		myAssert(false == mProcessManager.migrate(hostname1, port1, 0));
+		myAssert(false == mProcessManager.isAlive(0));
+		myAssert(-1 == mProcessManager.launch("localhost", 1, grepProcess));
 
 		System.out.println("Starting with " + grepProcess);
 
-		int grepPid = mProcessManager.launch("localhost", 80, grepProcess);
-		Thread.sleep(500);
-		mProcessManager.migrate("localhost", 81, grepPid);
-		Thread.sleep(1000);
+		// Launch, migrate and remove
+		int grepPid = mProcessManager.launch(hostname1, port1, grepProcess);
+		myAssert(grepPid > 0);
+		myAssert(mProcessManager.migrate(hostname2, port2, grepPid));
+		myAssert(mProcessManager.isAlive(grepPid));
+		myAssert(null != mProcessManager.remove(grepPid));
+		myAssert(false == mProcessManager.isAlive(grepPid));
+
+		// Ensure removed
+		myAssert(null == mProcessManager.remove(grepPid));
+		myAssert(false == mProcessManager.migrate(hostname2, port2, grepPid));
+
+		/**
+		 * Start multiple processes and put in set checking each time for
+		 * collision No pids should match even though these are the same
+		 * processes with the same vars
+		 */
 		System.out
-				.println("Process alive? " + mProcessManager.isAlive(grepPid));
-		mProcessManager.remove(grepPid);
-		System.out
-				.println("Process alive? " + mProcessManager.isAlive(grepPid));
-		mProcessManager.remove(grepPid);
-		mProcessManager.migrate("localhost", 80, grepPid);
-		mProcessManager.launch("localhost", 80, grepProcess);
+				.println("Start a bunch of fib, will all overwrite each other");
+		HashSet<Integer> pids = new HashSet<Integer>();
+		myAssert(pids.add(mProcessManager.launch("localhost", 80, fibProcess)));
+		myAssert(pids.add(mProcessManager.launch("localhost", 80,
+				new WriteFibProcess(fibArgs))));
+		myAssert(pids.add(mProcessManager.launch("localhost", 80,
+				new WriteFibProcess(fibArgs))));
+		myAssert(pids.add(mProcessManager.launch("localhost", 81,
+				new WriteFibProcess(fibArgs))));
+		myAssert(pids.add(mProcessManager.launch("localhost", 81,
+				new WriteFibProcess(fibArgs))));
+		myAssert(pids.add(mProcessManager.launch("localhost", 81,
+				new WriteFibProcess(fibArgs))));
 
-		// Try fib process
-		String[] fibArgs = { "15", "tmp/fib1.txt" };
-		MigratableProcess fibProcess = new WriteFibProcess(fibArgs);
+		System.out.println("Run find replace just to see if it works");
+		myAssert(0 < mProcessManager
+				.launch("localhost", 80, findReplaceProcess));
+		
+	}
 
-		mProcessManager.launch("localhost", 80, fibProcess);
-		mProcessManager.launch("localhost", 80, fibProcess);
-		mProcessManager.launch("localhost", 80, fibProcess);
-		mProcessManager.launch("localhost", 81, fibProcess);
-		mProcessManager.launch("localhost", 81, fibProcess);
-		mProcessManager.launch("localhost", 81, fibProcess);
-
-		// Try FindReplace
-		String[] replaceArgs = { "aa", "AA", "test/grep.txt",
-				"tmp/findReplaceOut1.txt" };
-		MigratableProcess findReplaceProcess = new FindReplaceProcess(
-				replaceArgs);
-		mProcessManager.launch("localhost", 80, findReplaceProcess);
+	private static void myAssert(boolean b) {
+		if (!b) {
+			throw new AssertionError("the test broke");
+		}
 	}
 }

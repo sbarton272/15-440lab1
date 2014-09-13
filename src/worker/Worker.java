@@ -19,14 +19,6 @@ import message.RequestMessage;
 import message.ResponseMessage;
 import migratableprocess.MigratableProcess;
 
-/**
- * ProcessManager controls the threads being used to run the various processes
- * 
- * TODO cleanup print statements
- * 
- * @author Spencer
- * 
- */
 public class Worker {
 
 	public static void main(String[] args) throws Exception {
@@ -235,7 +227,6 @@ class MessageHandler {
 			if (thread.isAlive()) {
 				
 				// Send that it is alive
-				// TODO better notation for success response
 				response = new AliveResponse(true, true);
 			} else {
 				
