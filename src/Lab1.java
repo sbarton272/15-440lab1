@@ -244,21 +244,21 @@ public class Lab1 {
 		System.out
 				.println("Start a bunch of fib, will all overwrite each other");
 		HashSet<Integer> pids = new HashSet<Integer>();
-		myAssert(pids.add(mProcessManager.launch("localhost", 80, fibProcess)));
-		myAssert(pids.add(mProcessManager.launch("localhost", 80,
+		myAssert(pids.add(mProcessManager.launch(hostname1, port1, fibProcess)));
+		myAssert(pids.add(mProcessManager.launch(hostname1, port1,
 				new WriteFibProcess(fibArgs))));
-		myAssert(pids.add(mProcessManager.launch("localhost", 80,
+		myAssert(pids.add(mProcessManager.launch(hostname1, port1,
 				new WriteFibProcess(fibArgs))));
-		myAssert(pids.add(mProcessManager.launch("localhost", 81,
+		myAssert(pids.add(mProcessManager.launch(hostname1, port1,
 				new WriteFibProcess(fibArgs))));
-		myAssert(pids.add(mProcessManager.launch("localhost", 81,
+		myAssert(pids.add(mProcessManager.launch(hostname1, port1,
 				new WriteFibProcess(fibArgs))));
-		myAssert(pids.add(mProcessManager.launch("localhost", 81,
+		myAssert(pids.add(mProcessManager.launch(hostname1, port1,
 				new WriteFibProcess(fibArgs))));
 
 		System.out.println("Run find replace just to see if it works");
 		myAssert(0 < mProcessManager
-				.launch("localhost", 80, findReplaceProcess));
+				.launch(hostname2, port2, findReplaceProcess));
 		
 	}
 
