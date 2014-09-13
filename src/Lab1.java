@@ -166,7 +166,11 @@ public class Lab1 {
 
 		// Launch process
 		int pid = mProcessManager.launch(hostname, port, process);
-		System.out.println("Started process with id (" + pid + ")");
+		if (pid == -1) {
+			System.out.println("Unable to start process");
+		} else {
+			System.out.println("Started process with id (" + pid + ")");
+		}
 	}
 	
 	//----------------------------------------------------------------

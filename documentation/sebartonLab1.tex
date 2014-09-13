@@ -125,8 +125,9 @@ The suspend operation is kept the same as the example GrepProcess. I liked this 
 
 \includegraphics[scale=.4]{launch.png}
 
-
 \subsection{Migrate Request}
+
+Note that the migration can be achieved simply with a remove and a launch. This keeps the interface cleaner.
 
 \includegraphics[scale=.3]{migrate.png}
 
@@ -142,22 +143,62 @@ The suspend operation is kept the same as the example GrepProcess. I liked this 
 %------------------------------------------
 
 \section{Implementation State}
-- Thread pool
-- Multiple clients/ requests
-- Not closing files
+The main bug that I have not determined is with the find replace process. It writes back lines with an extra newline. I believe this was an issue with the \\r character in windows but am not certain.
+
+Other issues may arise with a very large volume of processes being run as I did not optimize for performance.
+
+There were a few things that I would also have liked to implement:
+\begin{itemize}
+\item \textbf{Thread Pool} A thread pool for the Worker would be nice so that threads are not destroyed and recreated for every process.
+\item \textbf{Multiple Request Handling} Currently the process manager can only handle one request at a time and blocks until a response is received. Process manager could be made multithreaded.
+\item \textbf{Files stay open} Transactional i/o was implemented by closing the file after each transaction. A more efficient design would only close the file before removal.
+\end{itemize}
 
 %------------------------------------------
 
 \section{Running the Project}
 
+\subsection{Set-up}
+\begin{enumerate}
+\item Run \texttt{SETUP.py} to compile the code.
+\item \texttt{cd} to \texttt{src}
+\item Run \texttt{java -cp . worker/Worker <port>} with a specified port number to begin a worker. It will print its hostname which you should note for future use.
+\item Run \texttt{java -cp . Lab1} to start the process manager. This will start a prompt to begin testing with.
+\item In the prompt write \texttt{test} to run my tests. You will need to specify the hostname and port for two workers.
+\end{enumerate}
+
+\subsection{Example Commands}
+These example commands assume that two workers have been setup on \texttt{localhost} with ports \texttt{8080} and \texttt{8081}. 
+
+\begin{verbatim}
+> launch localhost 8080 migratableprocess.GrepProcess aa grep.txt grepOut2.txt
+Started process with id (1659750539)
+> migrate localhost 8081 1659750539
+Migrated successfully? true
+> isalive 1659750539
+Is process alive? true
+> remove 1659750539
+Remove process 1659750539
+> isalive 1659750539
+Is process alive? false
+\end{verbatim}
+
 %------------------------------------------
 
 \section{Dependencies}
 
-No dependencies beyond basic java files. The test cases do require that the test and tmp file be present which is how I submitted it.
+No dependencies beyond basic java libraries. The test cases do require that the test file be present which is how I submitted it.
 
 %------------------------------------------
 
 \section{Testing}
+
+You can either run my tests with the \texttt{test} command or see the earlier example on how to run processes in general. 
+
+My processes are
+\begin{itemize}
+\item \texttt{migratableprocess.FindReplaceProcess} 
+\item \texttt{migratableprocess.WriteFibProcess}
+\end{itemize}
 
 \end{document}
