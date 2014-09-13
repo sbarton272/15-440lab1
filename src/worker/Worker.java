@@ -97,7 +97,6 @@ class MessageHandler {
 			connected.close();
 
 		} catch (IOException | ClassNotFoundException e) {
-			// TODO not well handled
 			System.out.println("REQUEST ERROR");
 			e.printStackTrace();
 		}

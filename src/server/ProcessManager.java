@@ -34,7 +34,6 @@ public class ProcessManager {
 
 	// ------------------------------------------------------------
 
-	// TODO split into chunks to make try/catch easier to see
 	public int launch(String host, int port, MigratableProcess process) {
 
 		// Generate pid if it does not already have one
@@ -49,46 +48,26 @@ public class ProcessManager {
 			// Open socket to given worker
 			Socket soc = new Socket(host, port);
 
-			// Send process to worker in serialized form
-			ObjectOutputStream workerOutStream = new ObjectOutputStream(
-					soc.getOutputStream());
-			workerOutStream.writeObject(new LaunchRequest(process));
+			// Send request and receive response
+			LaunchResponse response = (LaunchResponse) sendRequest(soc, new LaunchRequest(process));
 
-			// Wait on response from worker
-			ObjectInputStream workerInStream = new ObjectInputStream(
-					soc.getInputStream());
-			try {
+			// If success store pid -> worker and set pid
+			if (response.isSuccess()) {
+				print("LAUNCH SUCCESS: " + host + ":"
+						+ Integer.toString(port) + " (" + pid + ")");
 
-				// blocks here
-				LaunchResponse response = (LaunchResponse) workerInStream
-						.readObject();
-
-				// If success store pid -> worker and set pid
-				if (response.isSuccess()) {
-					print("LAUNCH SUCCESS: " + host + ":"
-							+ Integer.toString(port) + " (" + pid + ")");
-
-					// Store pid -> worker
-					mPidWorkerMap.put(pid, new InetSocketAddress(host, port));
-				} else {
-
-					// Error case
-					pid = -1;
-				}
-
-			} catch (ClassNotFoundException e) {
-				e.printStackTrace();
+				// Store pid -> worker
+				mPidWorkerMap.put(pid, new InetSocketAddress(host, port));
+			} else {
 
 				// Error case
 				pid = -1;
 			}
 
-			workerOutStream.close();
-			workerInStream.close();
 			soc.close();
 
 		} catch (IOException e) {
-			print("Cannot connect/send: " + host + ":"
+			print("LAUNCH ERROR: " + host + ":"
 					+ Integer.toString(port));
 
 			// Error case
@@ -143,12 +122,12 @@ public class ProcessManager {
 				} else {
 
 					// If was dead then note this and do not return process
-					print("Process was already dead: " + pid);
+					print("REMOVE FAILURE: Process was already dead: " + pid);
 				}
 
 			} else {
 				// Print that error occurred
-				print("Invalid response from worker");
+				print("REMOVE FAILURE: Invalid response from worker");
 			}
 
 			workerSoc.close();
@@ -157,7 +136,7 @@ public class ProcessManager {
 			return process;
 
 		} catch (IOException e) {
-			print("Unable to connect to worker: "
+			print("REMOVE FAILURE: Unable to connect to worker: "
 					+ workerAddr.getHostString() + ":" + workerAddr.getPort());
 		}
 
@@ -185,7 +164,7 @@ public class ProcessManager {
 		// Lookup original worker for error case later if necessary, print error if not alive
 		InetSocketAddress originalWorkerAddr = mPidWorkerMap.get(pid);
 		if (originalWorkerAddr == null) {
-			print("Migrate FAILURE: Process is dead or non-existant ("
+			print("MIGRATE FAILURE: Process is dead or non-existant ("
 							+ pid + ")");
 			return false;
 		}
@@ -289,6 +268,10 @@ public class ProcessManager {
 
 	// ------------------------------------------------------------
 
+	public void setVerbose(boolean verbose) {
+		mVerbose = verbose;
+	}
+
 	private ResponseMessage sendRequest(Socket workerSoc, RequestMessage request) {
 		// Attempt communication over socket. Send request, receive response
 		try {
@@ -312,10 +295,6 @@ public class ProcessManager {
 		} catch (IOException | ClassNotFoundException e) {
 			return null;
 		}
-	}
-
-	public void setVerbose(boolean verbose) {
-		mVerbose = verbose;
 	}
 
 	private void print(String msg) {
